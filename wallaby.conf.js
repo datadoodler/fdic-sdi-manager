@@ -1,15 +1,12 @@
 module.exports = function () {
     return {
         files: [
-            '!Library/**/*.spec.ts',
-            '!Library/**/*.spec.js',
-            'Library/**/*.ts',
-            'Library/**/*.js'
+            '!lib/**/*.spec.js',
+            'lib/**/*.js'
         ],
 
         tests: [
-            'Library/**/*.spec.ts',
-            'Library/**/*.spec.js'
+            'lib/**/*.spec.js'
         ],
         env: {
             type: 'node'

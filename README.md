@@ -16,6 +16,5 @@
     * this should be an installable package available via <code> npm install fdic-sdi-manager</code>
 * Setup unit testing framework. We will be employing TDD and will need tests to guide our work. This will also asure that we don't get off-course too badly or code for edge cases that aren't worth the time spent.
     * Jasmine
-    * Karama
     * Wallaby
 * Upate blog (http://datadoodler.github.io/blog/) with pointer to public repo.
