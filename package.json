@@ -1,0 +1,26 @@
+{
+  "name": "fdic-sdi-manager",
+  "version": "0.0.1",
+  "description": "Interact with datadoodler resources on AWS",
+  "main": "fdic-sdi-manager.js",
+  "scripts": {
+    "test": "karma ./test/test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/datadoodler/fdic-sdi-manager.git"
+  },
+  "keywords": [
+    "AWS",
+    "DataDoodler",
+    "DynamoDb",
+    "FDIC",
+    "BankerDoodle"
+  ],
+  "author": "Kent Merrell",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/datadoodler/fdic-sdi-manager/issues"
+  },
+  "homepage": "https://github.com/datadoodler/fdic-sdi-manager#readme"
+}
