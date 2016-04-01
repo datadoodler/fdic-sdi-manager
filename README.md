@@ -7,11 +7,11 @@
 
 ## Project Setup Checklist
 
-* Setup git repo on github/datadoodler/fdic-sdi-manager. Include .gitignore and README.md.
+* Setup git repo on github/datadoodler/fdic-sdi-manager. Include .gitignore and the README file.
 * Create readme file to keep track of steps
 * Setup npm
     * create package.json by running <code>npm init</code>
-    * publish to npm repository (login to npmjs.com to insure credentials are present) run <code>npm publish</code>
+    * publish to npm repository (login to npmjs .com to insure credentials are present) run <code>npm publish</code>
     * insure publish was successful. The readme should show up at https://www.npmjs.com/package/fdic-sdi-manager
     * this should be an installable package available via <code> npm install fdic-sdi-manager</code>
 * Setup unit testing framework. We will be employing TDD and will need tests to guide our work. This will also asure that we don't get off-course too badly or code for edge cases that aren't worth the time spent.
