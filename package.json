@@ -4,7 +4,7 @@
   "description": "Interact with datadoodler resources on AWS",
   "main": "lib/fdic-sdi-manager.js",
   "scripts": {
-    "test": "karma ./test/test.js"
+    "test": "mocha"
   },
   "repository": {
     "type": "git",
@@ -24,9 +24,11 @@
   },
   "homepage": "https://github.com/datadoodler/fdic-sdi-manager#readme",
   "dependencies": {
-    "aws-sdk": "^2.3.0"
+    "aws-sdk": "^2.3.0",
+    "config": "^1.19.0"
   },
   "devDependencies": {
-    "jasmine": "^2.4.1"
+    "chai": "^3.5.0",
+    "mocha": "^2.4.5"
   }
 }

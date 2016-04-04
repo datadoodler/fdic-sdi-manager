@@ -2,17 +2,19 @@ module.exports = function () {
     return {
         files: [
             '!lib/**/*.spec.js',
-            'lib/**/*.js'
+            'lib/**/*.js',
+            'config/**/*.json',
+            'index.js'
         ],
 
         tests: [
-            'lib/**/*.spec.js'
+            'test/**/*.spec.js'
         ],
         env: {
             type: 'node'
         },
 
-        testFramework:'jasmine',
+        testFramework:'mocha',
 
         workers: {
             recycle: true
