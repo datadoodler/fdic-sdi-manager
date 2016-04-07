@@ -4,6 +4,10 @@
 * Will *not* be using typescript since we will have the luxury of ES6 (even ES7 if we want) syntax already. And with ES6 deconstructions, specifying types as parameters is not as meaningful. All considered, I think typescript would get in the way more than it helps.
 * No UI component in this project. It is intended to be imported to other projects that will provide UI.
 
+## Generators
+
+Simplify asynchronous control flow with generators. For example the process of expanding a quarterly zip file and returning an array of all the csv files it contains involves a sequence of asynchronous tasks. I've chosen to embrace ecmascript 6 generators accompanied with the co librarary to approach this task.
+
 
 ## Project Setup Checklist
 
