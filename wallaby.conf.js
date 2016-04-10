@@ -2,6 +2,7 @@ module.exports = function () {
     return {
         files: [
             '!lib/**/*.spec.js',
+            '!lib/file-handler.js',
             'lib/**/*.js',
             'config/**/*.json',
             'index.js'
