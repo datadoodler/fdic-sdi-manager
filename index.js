@@ -18,7 +18,6 @@ var QDate = require('./lib/q-date.js');
 
 var qdate = new QDate(2015,1);
 var fdicSdiQuarter = new FdicSdiQuarter(qdate);
-var f = fdicSdiQuarter.csvFiles;
-console.log('f',f);
+//var f = fdicSdiQuarter.csvFiles;
+//console.log('f',f);
 fdicSdiQuarter.insertCsvFiles();
-console.log(fdicSdiQuarter)
