@@ -1,7 +1,7 @@
 {
   //the absolute path
   "stage1Location":"/Users/kdm/Doodlezone/bankerdoodle/fdic-sdi-manager/test-data/fdic_stage_1",
-  "stage2Location":"/Users/kdm/Doodlezone/bankerdoodle/fdic-sdi-manager/test-data/fdic_stage_2",
+  "stage2Location":"/Users/kdm/Doodlezone/bankerdoodle/fdic-sdi-manager/test-data/fdic_stage_2/",
   "Customer": {
     "dbConfig": {
       "host": "localhost",
