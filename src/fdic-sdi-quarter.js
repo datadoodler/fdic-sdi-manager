@@ -12,11 +12,13 @@ class FdicSdiQuarter {
         this.qDate = qdate;
         this.db_csvFiles = new Datastore({
             filename: path.join(config.appDataLocation, '/sdiCsvFiles_' + this.qDate.string + '.db'),
-            autoload: true
+            autoload: true,
+            timestampData:true
         });
         this.db_allVars = new Datastore({
             filename: path.join(config.appDataLocation, '/sdiAllVars_' + this.qDate.string + '.db'),
-            autoload: true
+            autoload: true,
+            timestampData:true
         })
     }
 
@@ -27,28 +29,42 @@ class FdicSdiQuarter {
     }
 
     insertCsvFiles() {
+        console.log('in inserCsvFiles FileHandler',FileHandler);
+        //console.log(this)
         var p = FileHandler.getCompressedFileNames(this.stage1Filename)
-            //console.log('p',p)
-            //    .then(function (result) {
-            //        for(let i=0; i<result.length; i++){
-            //            //let record = {filename:result[i]};
-            //            console.log(this)
-            //            //this.db_csvFiles.insert(record,function(result){
-            //            //    console.log(result)
-            //            //});
-            //        }
-            //    });
-
             .then(function (result) {
                 for (let i = 0; i < result.length; i++) {
                     let record = {filename: result[i]};
-                    //console.log(this)
-                    this.db_csvFiles.insert(record, function (result) {
-                            console.log(result)
-                    });
+                    console.log(record);
+                    this.upsertCsvFile(result[i]);
+                    //this.csvFiles.insert(record, function (err,newDoc) {
+                    //    console.log(err,newDoc)
+                    //});
                 }
             }.bind(this));
-        this.db_csvFiles.insert({test: "abc"})
+        //this.db_csvFiles.insert({test: "abc"})
+    }
+
+    upsertCsvFile(filename){
+        let query = {
+            filename:filename
+        };
+        let update = {
+            filename:filename
+        };
+        let options={
+            upsert:true
+        };
+        let callback=function(err, numAffected, affectedDocuments, upsert){
+            console.log('err',err,'numAffected',numAffected,'affectedDocuments',affectedDocuments,'upsert',upsert)
+        };
+
+        this.csvFiles.update(query,update,options,callback);
+
+        //this.csvFiles.find(query,function(err,docs){
+        //    console.log('found ',docs)
+        //})
+
     }
 
     get stage1Location() {

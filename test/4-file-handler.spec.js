@@ -1,10 +1,11 @@
+'use strict';
 var path = require('path');
 
 var config = require('config');
 
 var chai = require('chai');
 var expect = chai.expect;
-var FileHandler = require('../lib/file-handler.js');
+var FileHandler = require('../src/file-handler.js');
 
 var fileThatExists = path.resolve('./test-data/fdic_stage_1/All_Reports_20081231.zip');
 
@@ -49,6 +50,7 @@ describe('4 -FileHandler', function () {
         });
         it('should return an empty array if the filename does not resolve to a zip file', function () {
             return FileHandler.getCompressedFileNames("XX").then(function (result) {
+                console.log(result);
                 expect(result.length).to.equal(0)
             })
         });

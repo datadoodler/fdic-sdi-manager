@@ -1,18 +1,18 @@
+'use strict';
 var path = require('path');
 var fs = require('fs');
 var chai = require('chai');
 var expect = chai.expect;
 
 var config = require('config');
-var FdicSdiManager = require('../lib/fdic-sdi-manager.js');
-var FdicSdiQuarter = require('../lib/fdic-sdi-quarter.js');
-var QDate = require('../lib/q-date.js');
+var FdicSdiManager = require('../src/fdic-sdi-manager.js');
+var FdicSdiQuarter = require('../src/fdic-sdi-quarter.js');
+var QDate = require('../src/q-date.js');
 
 describe('1- fdic-sdi-manager module', function () {
     describe('Instantiating index.js in root', function () {
         it('should refer to a FdicSdiManager object', function () {
             var indexJs = require('../index.js');
-            var FdicSdiManager = require('../lib/fdic-sdi-manager.js');
             var fdicSdiManager = new indexJs('qd');
             expect(fdicSdiManager).to.be.an.instanceof(FdicSdiManager)
         });

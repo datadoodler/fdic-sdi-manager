@@ -1,11 +1,20 @@
-module.exports = function () {
+const fs  = require('fs');
+const path = require('path')
+
+const babelConfiguration= JSON.parse(fs.readFileSync(path.join(__dirname,'.babelrc')));
+babelConfiguration.babel = require('babel-core');
+
+
+module.exports = function (wallaby) {
     return {
         files: [
-            '!lib/**/*.spec.js',
-            '!lib/file-handler.js',
-            'lib/**/*.js',
+
+            'src/file-handler.js',
+            'src/**/*.js',
             'config/**/*.json',
-            'index.js'
+            'index.js',
+            {pattern: '**/*.spec.js', ignore:true},
+            {pattern: 'node_modules/**/*.*', ignore:true}
         ],
 
         tests: [
@@ -13,6 +22,10 @@ module.exports = function () {
         ],
         env: {
             type: 'node'
+        },
+
+        compilers:{
+            '**/*.js' : wallaby.compilers.babel(babelConfiguration)
         },
 
         testFramework:'mocha',

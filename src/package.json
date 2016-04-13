@@ -4,6 +4,6 @@
   "main": "./fdic-sdi-manager.js",
   "dependencies": {
     "unzip": "^0.1.11",
-    "config": "^1.19.0",
+    "config": "^1.19.0"
   }
 }

@@ -38,6 +38,7 @@ function expandCompressedFiles(zipFile,destinationFolder){
 
 
 function getCompressedFileNames(zipFile) {
+    console.log('in getCompressedFileNames', zipFile);
     var p = new Promise(function (resolve, reject) {
         var ret = [];
 
@@ -47,7 +48,7 @@ function getCompressedFileNames(zipFile) {
         });
         strm.pipe(unzip.Parse())
             .on('entry', function (entry) {
-               // process.stdout.write('x');
+                process.stdout.write('x');
                 ret.push(entry.path);
                 entry.autodrain();
             });
@@ -55,13 +56,9 @@ function getCompressedFileNames(zipFile) {
             resolve(ret);
         });
     });
+    console.log('promise from getCompressedFileNames', p);
     return p;
 }
-module.exports = {
-    fileExists,
-    getCompressedFileNames,
-    expandCompressedFiles
-};
 
 
 //var zip = path.resolve('./test-data/fdic_stage_1/All_Reports_20081231.zip');
@@ -89,3 +86,8 @@ function getMyFils() {
     return prm;
 }
 
+module.exports = {
+    fileExists,
+    getCompressedFileNames,
+    expandCompressedFiles
+};

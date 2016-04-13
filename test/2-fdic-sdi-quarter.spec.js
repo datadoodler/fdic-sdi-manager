@@ -1,13 +1,22 @@
+'use strict';
 var path = require('path');
 var fs = require('fs');
 var chai = require('chai');
 var expect = chai.expect;
 
 var config = require('config');
-var FdicSdiQuarter = require('../lib/fdic-sdi-quarter.js');
-var QDate = require('../lib/q-date.js');
+var FdicSdiQuarter = require('../src/fdic-sdi-quarter.js');
+var QDate = require('../src/q-date.js');
 
-describe.only('2- fdic-sdi-quarter module', function () {
+
+describe('From index.html',function(){
+    it('inserts files into database',function(){
+        var fm = require('../index.js')
+        console.log(fm)
+    })
+})
+
+describe('2- fdic-sdi-quarter module', function () {
     var qdate = new QDate(2015, 1);
     var fdicSdiQuarter = new FdicSdiQuarter(qdate);
 
@@ -57,8 +66,15 @@ describe.only('2- fdic-sdi-quarter module', function () {
             expect(fdicSdiQuarter.insertCsvFiles).to.exist;
         })
 
+        it('should have an upsertCsvFile method',function(){
+            expect(fdicSdiQuarter.upsertCsvFile).to.exist;
+        })
         it('should gain access to actual filename',function(){
-            //fdicSdiQuarter.insertCsvFiles();
+            var qdate = new QDate(2015, 1);
+            var qtr = new FdicSdiQuarter(qdate);
+
+            console.log('fdicSdiQuarter',qtr)
+            qtr.insertCsvFiles();
         })
     })
 })
