@@ -9,33 +9,47 @@ class FdicSdiQuarter {
 
 
     constructor(qdate) {
-        this.qDate = qdate;
-        this.db_csvFiles = new Datastore({
-            filename: path.join(config.appDataLocation, '/sdiCsvFiles_' + this.qDate.string + '.db'),
-            autoload: true,
-            timestampData:true
+        this._qDate = qdate;
+
+        //assume it is expanded to avoid performance hit of reading zip by default
+        this._zipFileExpanded=true;
+
+        //nedb table for csvFiles for this quarter
+        this._db_csvFiles = new Datastore({
+            filename: path.join(config.appDataLocation, '/sdiCsvFiles_' + this._qDate.string + '.db'),
+            autoload: false,
+            timestampData: true
         });
-        this.db_allVars = new Datastore({
-            filename: path.join(config.appDataLocation, '/sdiAllVars_' + this.qDate.string + '.db'),
-            autoload: true,
-            timestampData:true
-        })
+
+        //nedb table for all variables in this quarter
+        this._db_allVars = new Datastore({
+            filename: path.join(config.appDataLocation, '/sdiAllVars_' + this._qDate.string + '.db'),
+            autoload: false,
+            timestampData: true
+        });
+
+        //an array of filenames in the fdic quarter zip file
+        this._csvFilenames = [];
     }
 
-    get csvFiles() {
-        //console.log('stage1Filename', this.stage1Filename);
 
-        return this.db_csvFiles;
+    //csv Files is a simple string array that is
+    get csvFilenames() {
+        return this._csvFilenames;
     }
+
+    //csvFilenames(x){
+    //    FileHandler.getCompressedFileNames(this.stage1Filename).then(function (result) {
+    //        this._csvFilenames = result;
+    //    })
+    //}
 
     insertCsvFiles() {
-        console.log('in inserCsvFiles FileHandler',FileHandler);
-        //console.log(this)
         var p = FileHandler.getCompressedFileNames(this.stage1Filename)
             .then(function (result) {
                 for (let i = 0; i < result.length; i++) {
                     let record = {filename: result[i]};
-                    console.log(record);
+                    //console.log(record);
                     this.upsertCsvFile(result[i]);
                     //this.csvFiles.insert(record, function (err,newDoc) {
                     //    console.log(err,newDoc)
@@ -45,21 +59,21 @@ class FdicSdiQuarter {
         //this.db_csvFiles.insert({test: "abc"})
     }
 
-    upsertCsvFile(filename){
+    upsertCsvFile(filename) {
         let query = {
-            filename:filename
+            filename: filename
         };
         let update = {
-            filename:filename
+            filename: filename
         };
-        let options={
-            upsert:true
+        let options = {
+            upsert: true
         };
-        let callback=function(err, numAffected, affectedDocuments, upsert){
-            console.log('err',err,'numAffected',numAffected,'affectedDocuments',affectedDocuments,'upsert',upsert)
+        let callback = function (err, numAffected, affectedDocuments, upsert) {
+            console.log('err', err, 'numAffected', numAffected, 'affectedDocuments', affectedDocuments, 'upsert', upsert)
         };
 
-        this.csvFiles.update(query,update,options,callback);
+        this.csvFiles.update(query, update, options, callback);
 
         //this.csvFiles.find(query,function(err,docs){
         //    console.log('found ',docs)
@@ -67,12 +81,24 @@ class FdicSdiQuarter {
 
     }
 
+    get qDate(){
+        return this._qDate;
+    }
+
+    get zipFileExpanded(){
+        return this._zipFileExpanded;
+    }
+
     get stage1Location() {
         return config.stage1Location
     }
 
+    get stage2Location() {
+        return config.stage2Location
+    }
+
     get stage1Filename() {
-        return path.join(this.stage1Location, '/All_Reports_' + this.qDate.string + '.zip')
+        return path.join(this.stage1Location, '/All_Reports_' + this._qDate.string + '.zip')
     }
 
     get stage1FileExists() {
@@ -84,6 +110,12 @@ class FdicSdiQuarter {
             return false
         }
         return false;
+    }
+
+    extractZip(){
+        //This is inherently an async operation
+        var p =  FileHandler.extractZippedFiles(this.stage1Filename, this.stage2Location);
+        return p;
     }
 }
 

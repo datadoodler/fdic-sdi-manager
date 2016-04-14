@@ -14,6 +14,7 @@ module.exports = function (wallaby) {
             'config/**/*.json',
             'index.js',
             {pattern: '**/*.spec.js', ignore:true},
+            {pattern: '**/*.db', ignore:true},
             {pattern: 'node_modules/**/*.*', ignore:true}
         ],
 
@@ -24,9 +25,6 @@ module.exports = function (wallaby) {
             type: 'node'
         },
 
-        compilers:{
-            '**/*.js' : wallaby.compilers.babel(babelConfiguration)
-        },
 
         testFramework:'mocha',
 

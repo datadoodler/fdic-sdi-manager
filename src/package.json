@@ -1,9 +1,0 @@
-{
-  "name": "fdic-sdi-manager",
-  "version": "0.0.1",
-  "main": "./fdic-sdi-manager.js",
-  "dependencies": {
-    "unzip": "^0.1.11",
-    "config": "^1.19.0"
-  }
-}

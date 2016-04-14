@@ -26,10 +26,11 @@
   "dependencies": {
     "aws-sdk": "^2.3.0",
     "co": "^4.6.0",
+    "config": "^1.19.0",
     "nedb": "^1.8.0",
     "request-promise": "^2.0.1",
     "unzip": "^0.1.11",
-    "config": "^1.19.0"
+    "yauzl": "^2.4.1"
   },
   "devDependencies": {
     "babel-core": "^6.7.6",

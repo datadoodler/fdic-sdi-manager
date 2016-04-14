@@ -12,7 +12,6 @@ var QDate = require('../src/q-date.js');
 describe('From index.html',function(){
     it('inserts files into database',function(){
         var fm = require('../index.js')
-        console.log(fm)
     })
 })
 
@@ -29,51 +28,68 @@ describe('2- fdic-sdi-quarter module', function () {
 
     describe('basic instance properties', function () {
 
-        it('should have a qDate property of type QDate', function () {
+        it('qDate property of type QDate', function () {
             expect(fdicSdiQuarter.qDate).to.be.an.instanceof(QDate)
         });
 
-        it('should have a stage1Location property assigned in configuartion', function () {
+        it('stage1Location property assigned in configuartion', function () {
             var stage1Location_conf = config.stage1Location;
             expect(stage1Location_conf.length).to.be.above(0);
-            expect(fdicSdiQuarter.stage1Location).to.be.equal(stage1Location_conf);
+            expect(FdicSdiQuarter.stage1Location).to.be.equal(stage1Location_conf);
         });
 
-        it('should have a stage1Filename property derived from qDate and stage1Location', function () {
+        it('stage1Filename property derived from qDate and stage1Location', function () {
             var fname = path.join(config.stage1Location, '/All_Reports_' + fdicSdiQuarter.qDate.string + '.zip');
             expect(fdicSdiQuarter.stage1Filename).to.equal(fname);
         });
 
-        it('should have a stage1FileExists property (bool)', function () {
+        it('zipFileExpanded (bool)',function(){
+            expect(typeof fdicSdiQuarter.zipFileExpanded).to.equal('boolean')
+        });
+
+        it('stage1FileExists property (bool)', function () {
             expect(fdicSdiQuarter.stage1FileExists).to.be.true;
             var qdateNotExist = new QDate(2015, 2);
             var fdicSdiQuarterNotExist = new FdicSdiQuarter(qdateNotExist);
-            expect(fdicSdiQuarterNotExist.stage1FileExists).to.be.false
+            expect(fdicSdiQuarterNotExist.stage1FileExists).to.be.false;
         });
 
+        it('csvFilenames property should be empty array when object first initialized',function(){
+            const newFdicQuarter = new FdicSdiQuarter(2012,1);
+            expect(newFdicQuarter.csvFilenames).to.be.empty;
+            expect(newFdicQuarter.csvFilenames).to.be.an('Array');
+        });
         it('should have a unzipped property (bool)');
 
     });
 
     describe('csvFiles database-related methods',function(){
 
-        it('should have a csvFiles property (persisted NeDB table - Datastore)',function(){
-            expect(fdicSdiQuarter.csvFiles).to.be.an('object');
-            fdicSdiQuarter.insertCsvFiles(function(rslt, b){console.log(rslt,b)});
+        it('extractZip method exists',function(){
+            expect(fdicSdiQuarter.extractZip).to.exist;
+        });
+
+        it('extractZip method actually extracts files',function(){
+            fdicSdiQuarter.extractZip();
+            //WARNING: This method should be skipped most of the time due to perf hit.
         })
+
+        it('csvFilenames property exists',function(){
+            expect(fdicSdiQuarter.csvFilenames).to.be.an('array');
+            fdicSdiQuarter.insertCsvFiles(function(rslt, b){console.log(rslt,b)});
+        });
 
         it('should have an insertCsvFiles method',function(){
             expect(fdicSdiQuarter.insertCsvFiles).to.exist;
-        })
+        });
 
         it('should have an upsertCsvFile method',function(){
             expect(fdicSdiQuarter.upsertCsvFile).to.exist;
-        })
+        });
+
         it('should gain access to actual filename',function(){
             var qdate = new QDate(2015, 1);
             var qtr = new FdicSdiQuarter(qdate);
-
-            console.log('fdicSdiQuarter',qtr)
             qtr.insertCsvFiles();
         })
     })

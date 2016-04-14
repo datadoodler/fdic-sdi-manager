@@ -7,8 +7,7 @@ var chai = require('chai');
 var expect = chai.expect;
 var FileHandler = require('../src/file-handler.js');
 
-var fileThatExists = path.resolve('./test-data/fdic_stage_1/All_Reports_20081231.zip');
-
+var fileThatExists = path.resolve(config.stage1Location + '/All_Reports_20081231.zip');
 
 describe('4 -FileHandler', function () {
     it('should be a static grouping of utility methods', function () {
@@ -37,31 +36,30 @@ describe('4 -FileHandler', function () {
         });
     });
 
-    describe('getCompressedFileNames method', function () {
+    describe.skip('getCompressedFileNames method', function () {
         this.timeout(15000);
         it('should be a function type', function () {
-            expect(FileHandler.getCompressedFileNames).to.exist;
-
-        });
-        it.skip('should return an array of file names (strings) included in zip file', function () {
-            return FileHandler.getCompressedFileNames(fileThatExists).then(function (result) {
-                expect(result.length).to.equal(62)
-            })
         });
         it('should return an empty array if the filename does not resolve to a zip file', function () {
             return FileHandler.getCompressedFileNames("XX").then(function (result) {
-                console.log(result);
                 expect(result.length).to.equal(0)
             })
         });
     });
 
-    describe('expandCompressedFiles method', function () {
+    describe.only('extractZippedFiles method', function () {
         it('should be a function type', function () {
-            expect(FileHandler.expandCompressedFiles).to.exist;
+            expect(FileHandler.extractZippedFiles).to.exist;
         });
-        it.skip('should copy all files in zip file to destination folder', function () {
-            FileHandler.expandCompressedFiles(fileThatExists, config.stage2Location)
+
+        it('should copy all files in zip file to destination folder', function () {
+            this.timeout(20000);
+
+
+            return FileHandler.extractZippedFiles(fileThatExists, config.stage2Location).then(function(result){
+                expect(result).to.equal(62);
+            });
+
         });
         it('should overwrite any preexisting files in destination folder');
     })
