@@ -1,7 +1,7 @@
 'use strict';
 var fs = require('fs');
 var path = require('path');
-var unzip = require('unzip');
+
 
 var yauzl = require("yauzl");
 
