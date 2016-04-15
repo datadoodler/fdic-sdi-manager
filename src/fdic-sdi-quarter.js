@@ -10,6 +10,28 @@ class FdicSdiQuarter {
 
     constructor(qdate) {
         this._qDate = qdate;
+
+        // This is a good place for a generator function to initialize the object with
+        // the necessary asynch operations.
+        /**
+         * Things that need to happen
+         * Check if local data is persisted for this particular quarter.
+         *  * ETL state is persisted in this._db_etlState
+         *      - if it doesn't exist, create it and initialize properties as non-persisted value
+         *      - csvFilesArePersisted (bool)
+         *      - allVarsArePersisted (bool)
+         *  * List of CSV filenames along with various metadata (creation/extraction dates, size)
+         *      - this is held in this._db_csvFiles
+         *      - if this is
+         *  * List of all vars along with various metadata (file, varname, type, [max,min,avg,kurtosis,...]
+         *      - this is held in this._db_allVars
+         *      - (this may be deleted after the distinctVars table is created)
+         *  * List of distinct vars
+         *      - this is held in this._db_distinctVars
+         *
+         */
+
+
         this._unzipped=false;
 
         //assume it is expanded to avoid performance hit of reading zip by default
@@ -36,7 +58,9 @@ class FdicSdiQuarter {
 
     //csv Files is a simple string array that is
     get csvFilenames() {
+        console.log('this._csvFilenames;',this._csvFilenames)
         return this._csvFilenames;
+
     }
 
     get unzipped(){
