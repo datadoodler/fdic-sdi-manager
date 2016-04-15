@@ -1,9 +1,6 @@
 const fs  = require('fs');
 const path = require('path')
 
-const babelConfiguration= JSON.parse(fs.readFileSync(path.join(__dirname,'.babelrc')));
-babelConfiguration.babel = require('babel-core');
-
 
 module.exports = function (wallaby) {
     return {
@@ -13,13 +10,14 @@ module.exports = function (wallaby) {
             'src/**/*.js',
             'config/**/*.json',
             'index.js',
-            {pattern: '**/*.spec.js', ignore:true},
+            {pattern: 'src/**/*.spec.js', ignore:true},
             {pattern: '**/*.db', ignore:true},
             {pattern: 'node_modules/**/*.*', ignore:true}
         ],
 
         tests: [
-            'test/**/*.spec.js'
+            'test/**/*.spec.js',
+            {pattern: 'test/4-file-handler.spec.jsx', ignore:true}
         ],
         env: {
             type: 'node'

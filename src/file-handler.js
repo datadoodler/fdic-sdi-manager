@@ -6,13 +6,19 @@ var path = require('path');
 var yauzl = require("yauzl");
 
 
-function fileExists(path) {
+function fileExists(path, cb) {
     var p = new Promise(function (resolve, reject) {
         fs.stat(path, function (err, stats) {
             if (err) {
+                if (cb) {
+                    cb(false)
+                }
                 resolve(false)
             }
             if (stats && stats.isFile) {
+                if (cb) {
+                    cb(true)
+                }
                 resolve(true)
             }
         })
@@ -24,90 +30,50 @@ function fileExists(path) {
 
 function extractZippedFiles(pathToFile, destinationFolder) {
     var p = new Promise(function (resolve, reject) {
+        function handleErr() {
+            resolve([])
+        }
 
-        var mycounter = 0;
+        fileExists(pathToFile, function (rsl) {
+                if (!rsl) {
+                    resolve([])
+                }
+                else {
 
-        yauzl.open(pathToFile, {lazyEntries: true}, function (err, zipfile) {
-            if (err) throw err;
-            zipfile.readEntry();
-            zipfile.on("entry", function (entry) {
-                mycounter++;
-                // file entry
-                zipfile.openReadStream(entry, function (err, readStream) {
-                    if (err) throw err;
-                    console.log(mycounter)
-//                    console.log('entry.fileName',entry.fileName);
-//                    console.log('destinationFolder',destinationFolder)
-                    readStream.pipe(fs.createWriteStream(destinationFolder + entry.fileName));
-                    readStream.on("end", function () {
-                        zipfile.readEntry();
-                    });
-                });
-            });
-            zipfile.on('end', function (err) {
-                resolve(mycounter)
-            })
-        });
-
-
-        //var mycounter =0;
-        //
-        //
-        //
-        //var readstream = fs.createReadStream(zipFile);
-        //readstream.pipe(unzip.Extract({path: destinationFolder}))
-        //    .on('write',function(entry){
-        //        mycounter++
-        //    })
-        //.on('finish',function(){
-        //    resolve(mycounter)
-        //})
-        //;
-
-
-        //var readStream = fs.createReadStream(path.normalize(zipFile));
-        //var writeStream = fs.createWriteStream(path.normalize(destinationFolder));
-        //
-        //readStream
-        //    .pipe(unzip.Parse())
-        //    .on('entry', (entry) => entry.pipe(writeStream) )
-        //    .on('finish', () => {
-        //        resolve(10);
-        //    })
-        //
-
-    });
+                    var mycounter = 0;
+                    var ret = [];
+                    try {
+                        yauzl.open(pathToFile, {lazyEntries: true}, function (err, zipfile) {
+                            if (err) handleErr();//throw err;
+                            zipfile.readEntry();
+                            zipfile.on("entry", function (entry) {
+                                mycounter++;
+                                // file entry
+                                zipfile.openReadStream(entry, function (err, readStream) {
+                                    if (err) handleErr();//throw err;
+                                    ret.push(entry.fileName);
+                                    //console.log(mycounter)
+                                    //console.log('entryx', entry);
+                                    readStream.pipe(fs.createWriteStream(destinationFolder + entry.fileName));
+                                    readStream.on("end", function () {
+                                        zipfile.readEntry();
+                                    });
+                                });
+                            });
+                            zipfile.on('end', function (err) {
+                                resolve(ret)
+                            })
+                        });
+                    }
+                    catch (e) {
+                        resolve([])
+                    }
+                }
+            }
+        );
+    })
     return p;
-    // console.log(zipFile);
-    // console.log(destinationFolder);
-    //cb()
-    // fs.createReadStream('/Users/kdm/Doodlezone/bankerdoodle/fdic-sdi-manager/test-data/fdic_stage_1/All_Reports_20081231.zip').pipe(unzip.Extract({ path: '/Users/kdm/Doodlezone/bankerdoodle/fdic-sdi-manager/test-data/fdic_stage_2/' }));
-    //
-    // setTimeout(function(){
-    //     console.log('check now')
-    // },5000)
 
-
-    //var readStream = fs.createReadStream(path.normalize(zipFile));
-    //var writeStream = fs.createWriteStream(path.normalize(destinationFolder));
-    //
-    //readStream
-    //    .pipe(unzip.Parse())
-    //    .pipe(writeStream)
-
-    //readStream
-    //    .pipe(unzip.Parse())
-    //    .on('entry', (entry) => entry.pipe(writeStream) )
-    //    .on('finish', () => {
-    //        console.log('finish')
-    //    })
-
-    //var readStream = fs.createReadStream(zipFile);
-    //var writeStream = fs.createWriteStream(destinationFolder);
-    ////console.log(writeStream);
-    //readStream
-    //    .pipe(unzip.Parse())
-    //    .pipe(writeStream)
 }
 
 

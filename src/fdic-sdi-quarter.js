@@ -10,6 +10,7 @@ class FdicSdiQuarter {
 
     constructor(qdate) {
         this._qDate = qdate;
+        this._unzipped=false;
 
         //assume it is expanded to avoid performance hit of reading zip by default
         this._zipFileExpanded=true;
@@ -38,13 +39,16 @@ class FdicSdiQuarter {
         return this._csvFilenames;
     }
 
+    get unzipped(){
+        return this._unzipped;
+    }
     //csvFilenames(x){
     //    FileHandler.getCompressedFileNames(this.stage1Filename).then(function (result) {
     //        this._csvFilenames = result;
     //    })
     //}
 
-    insertCsvFiles() {
+    persistCsvFilenames() {
         var p = FileHandler.getCompressedFileNames(this.stage1Filename)
             .then(function (result) {
                 for (let i = 0; i < result.length; i++) {
@@ -112,10 +116,19 @@ class FdicSdiQuarter {
         return false;
     }
 
-    extractZip(){
+    extractZip(force){
         //This is inherently an async operation
-        var p =  FileHandler.extractZippedFiles(this.stage1Filename, this.stage2Location);
-        return p;
+        if(force) {
+            FileHandler.extractZippedFiles(this.stage1Filename, this.stage2Location).then(function (one, result) {
+                console.log('one', one);
+                console.log('result', result);
+            });
+        }
+        //console.log('FileHandler returns this', p)
+        //p.then(function(result){
+        //    console.log('then result',result)
+        //})
+        //return p;
     }
 }
 

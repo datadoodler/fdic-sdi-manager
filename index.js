@@ -17,13 +17,13 @@ module.exports = require('./src/fdic-sdi-manager');
 //exports.fsm = x;
 
 
-var FdicSdiQuarter=require('./src/fdic-sdi-quarter');
-var QDate = require('./src/q-date.js');
+//var FdicSdiQuarter=require('./src/fdic-sdi-quarter');
+//var QDate = require('./src/q-date.js');
 
-var qdate = new QDate(2015,1);
-var fdicSdiQuarter = new FdicSdiQuarter(qdate);
+//var qdate = new QDate(2015,1);
+//var fdicSdiQuarter = new FdicSdiQuarter(qdate);
 //var f = fdicSdiQuarter.csvFiles;
 //console.log('f',f);
-console.log(qdate)
-fdicSdiQuarter.insertCsvFiles();
+//console.log(qdate)
+//fdicSdiQuarter.insertCsvFiles();
 //fdicSdiQuarter.upsertCsvFile("All_Reports_20150331_U.S. Government Obligations.csv");

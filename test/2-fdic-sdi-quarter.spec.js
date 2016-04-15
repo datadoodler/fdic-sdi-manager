@@ -35,7 +35,7 @@ describe('2- fdic-sdi-quarter module', function () {
         it('stage1Location property assigned in configuartion', function () {
             var stage1Location_conf = config.stage1Location;
             expect(stage1Location_conf.length).to.be.above(0);
-            expect(FdicSdiQuarter.stage1Location).to.be.equal(stage1Location_conf);
+            expect(fdicSdiQuarter.stage1Location).to.be.equal(stage1Location_conf);
         });
 
         it('stage1Filename property derived from qDate and stage1Location', function () {
@@ -59,7 +59,9 @@ describe('2- fdic-sdi-quarter module', function () {
             expect(newFdicQuarter.csvFilenames).to.be.empty;
             expect(newFdicQuarter.csvFilenames).to.be.an('Array');
         });
-        it('should have a unzipped property (bool)');
+        it('should have a unzipped property (bool)',function(){
+            expect(typeof fdicSdiQuarter.unzipped).to.equal('boolean')
+        });
 
     });
 
@@ -76,11 +78,12 @@ describe('2- fdic-sdi-quarter module', function () {
 
         it('csvFilenames property exists',function(){
             expect(fdicSdiQuarter.csvFilenames).to.be.an('array');
-            fdicSdiQuarter.insertCsvFiles(function(rslt, b){console.log(rslt,b)});
+            fdicSdiQuarter.persistCsvFilenames(function(rslt, b){
+                console.log(rslt,b)});
         });
 
         it('should have an insertCsvFiles method',function(){
-            expect(fdicSdiQuarter.insertCsvFiles).to.exist;
+            expect(fdicSdiQuarter.persistCsvFilenames).to.exist;
         });
 
         it('should have an upsertCsvFile method',function(){
@@ -90,7 +93,7 @@ describe('2- fdic-sdi-quarter module', function () {
         it('should gain access to actual filename',function(){
             var qdate = new QDate(2015, 1);
             var qtr = new FdicSdiQuarter(qdate);
-            qtr.insertCsvFiles();
+            qtr.persistCsvFilenames();
         })
     })
 })
