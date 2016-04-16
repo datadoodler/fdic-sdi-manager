@@ -5,12 +5,37 @@ var config = require('config');
 var Datastore = require('nedb')
 var FileHandler = require('./file-handler.js');
 
+
+
+//var fdicSdiQuarter=co(fdicSdiQuarter_factory(qdate));
+
+module.exports = function *fdicSdiQuarter_factory(qdate) {
+    var newInstance = new FdicSdiQuarter(qdate);
+    newInstance.fname = yield getName('jj');
+    return newInstance;
+}
+
+//export fdicSdiQuarter_factory;
+function getName(name) {
+    console.log('in getName', name)
+    //var x = [1, 2];
+    //console.log('wheres the error?',x[3].name)
+    var p = new Promise(function (resolve, rej) {
+        setTimeout(function () {
+            console.log('leaving getName1', name)
+            resolve(name)
+            console.log('leaving getName2', name)
+        }, 2000)
+
+    });
+    return p;
+}
 class FdicSdiQuarter {
 
 
     constructor(qdate) {
         this._qDate = qdate;
-
+        this._fname = 'abc';
         // This is a good place for a generator function to initialize the object with
         // the necessary asynch operations.
         /**
@@ -32,10 +57,10 @@ class FdicSdiQuarter {
          */
 
 
-        this._unzipped=false;
+        this._unzipped = false;
 
         //assume it is expanded to avoid performance hit of reading zip by default
-        this._zipFileExpanded=true;
+        this._zipFileExpanded = true;
 
         //nedb table for csvFiles for this quarter
         this._db_csvFiles = new Datastore({
@@ -58,14 +83,15 @@ class FdicSdiQuarter {
 
     //csv Files is a simple string array that is
     get csvFilenames() {
-        console.log('this._csvFilenames;',this._csvFilenames)
+        console.log('this._csvFilenames;', this._csvFilenames)
         return this._csvFilenames;
 
     }
 
-    get unzipped(){
+    get unzipped() {
         return this._unzipped;
     }
+
     //csvFilenames(x){
     //    FileHandler.getCompressedFileNames(this.stage1Filename).then(function (result) {
     //        this._csvFilenames = result;
@@ -109,11 +135,19 @@ class FdicSdiQuarter {
 
     }
 
-    get qDate(){
+    get fname() {
+        return this._fname;
+    }
+
+    set fname(name) {
+        this._fname = name;
+    }
+
+    get qDate() {
         return this._qDate;
     }
 
-    get zipFileExpanded(){
+    get zipFileExpanded() {
         return this._zipFileExpanded;
     }
 
@@ -140,9 +174,9 @@ class FdicSdiQuarter {
         return false;
     }
 
-    extractZip(force){
+    extractZip(force) {
         //This is inherently an async operation
-        if(force) {
+        if (force) {
             FileHandler.extractZippedFiles(this.stage1Filename, this.stage2Location).then(function (one, result) {
                 console.log('one', one);
                 console.log('result', result);
@@ -155,6 +189,4 @@ class FdicSdiQuarter {
         //return p;
     }
 }
-
-module.exports = FdicSdiQuarter;
 

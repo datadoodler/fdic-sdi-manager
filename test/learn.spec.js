@@ -5,8 +5,8 @@ var chai = require('chai');
 var expect = chai.expect;
 
 
-var FdicSdiQuarter = require('../src/fdic-sdi-quarter')
-var FileHandler = require('../src/file-handler')
+var FdicSdiQuarter = require('../src/fdic-sdi-quarter');
+var FileHandler = require('../src/file-handler');
 var QDate = require('../src/q-date');
 var qDate = new QDate(2008, 4);
 var fdicSdiQuarter = new FdicSdiQuarter(qDate);
@@ -16,38 +16,57 @@ var co = require('co');
 
 class MyClass {
 
-    constructor() {
-        function *myGen() {
-            try {
-                this._fname = yield getName('kent');
-                this._lname = yield getLName('a','merrell');
-                console.log(fname, lname)
-            }
-            catch (e) {
-                console.log('ERROR', e)
-            }
-        }
+    constructor(fname) {
+        this._fname = 'temp'
+        //co(this.initMe)
     }
 
-    get fname (){
+    get fname() {
         return this._fname;
+    }
+
+    set fname(fname) {
+        this._fname = fname
     }
 }
 
-co(myGen);
+function *MyClassFactory(fname) {
+    try {
 
-var myClass = new MyClass();
+        var myClass = new MyClass(fname);
+        myClass.fname = yield getName('kent');
+        console.log('in factory, myClass', myClass);
+        return myClass;
+    }
+    catch (e) {
+        console.log('WHOA - ERROR!!!', e)
+    }
+}
+
+var myClass = co(MyClassFactory('johny'));
+console.log("just after instantiating co", myClass);
+myClass.then(function (result, x) {
+    console.log('in myClass.then', myClass, result)
+    console.log(result.fname, x);
+})
+
+
+console.log(`so I'm walking along with my new class ${myClass.fname}`);
+
+//co(initMyClass(myClass));
+
+//var myClass = new MyClass();
 //console.log("Lady's and gentlemen! I give you fname", myClass.fname);
 
-console.log('XXXX',myGen)
-function *myGen() {
+
+function *initMyClass(myClass) {
     try {
-        var fname = yield getName('kent');
-        var lname = yield getLName(fname, 'merrell');
+        myClass.fname = yield getName('kent');
+        var lname = yield getLName(myClass.fname, 'merrell');
         //var two = yield 2;
         //var three = yield 3;
         //var res = yield [fname, lname];
-        console.log(fname, lname)
+        console.log(myClass, lname)
     }
     catch (e) {
         console.log('ERROR', e)
@@ -61,6 +80,8 @@ function getNameNoPromise(namex) {
 }
 function getName(name) {
     console.log('in getName', name)
+    var x = [1,2];
+    console.log('wheres the error?',x[3].name)
     var p = new Promise(function (resolve, rej) {
         setTimeout(function () {
             console.log('leaving getName1', name)
