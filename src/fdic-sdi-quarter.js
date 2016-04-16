@@ -9,17 +9,21 @@ var QDate = require('./q-date')
 
 //var fdicSdiQuarter=co(fdicSdiQuarter_factory(qdate));
 
-module.exports = function *fdicSdiQuarter_factory(qdate, yyyy, q) {
+module.exports = function *FdicSdiQuarter_factory(options) {
+    var date = new Date();
+    options = options === undefined ? {} : options;
+    options.yyyy = options.yyyy === undefined ? date.getFullYear() : options.yyyy;
+    options.quarter = options.quarter === undefined ? 1 : options.quarter;
+    options.qdate = options.qdate === undefined ? new QDate(options.yyyy, options.quarter) : options.qdate;
+    console.log('opt here', options);
     try {
-        if (!qdate) {
-            qdate = new QDate(yyyy, q);
-            //console.log(qdate)
-        }
-        if (qdate.isValid) {
-            var fdicSdiQuarter = new FdicSdiQuarter(qdate);
+        if (options.qdate.isValid) {
+            var fdicSdiQuarter = new FdicSdiQuarter(options.qdate);
 
             //FILL ASYNC PROPERTIES FOR THIS INSTANCE
             fdicSdiQuarter.fname = yield getName('jj');
+
+
             return fdicSdiQuarter;
         }
         else {

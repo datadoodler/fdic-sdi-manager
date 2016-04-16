@@ -16,7 +16,8 @@ module.exports = function (wallaby) {
         ],
 
         tests: [
-            'test/**/*.spec.js',
+            'test/2-fdic-sdi-quarter.spec.js',
+//            'test/**/*.spec.js',
             {pattern: 'test/4-file-handler.spec.jsx', ignore:true}
         ],
         env: {

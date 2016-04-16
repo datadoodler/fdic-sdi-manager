@@ -5,7 +5,9 @@ var chai = require('chai');
 var expect = chai.expect;
 
 var config = require('config');
-var FdicSdiQuarter = require('../src/fdic-sdi-quarter.js');
+var co =  require('co')
+
+var FdicSdiQuarter_factory = require('../src/fdic-sdi-quarter');
 var QDate = require('../src/q-date.js');
 
 
@@ -15,10 +17,17 @@ describe('From index.html',function(){
     })
 })
 
-describe('2- fdic-sdi-quarter module', function () {
+describe.only('2- fdic-sdi-quarter module', function (done) {
 
     var qdate = new QDate(2015, 1);
-    var fdicSdiQuarter = new FdicSdiQuarter(qdate);
+    var opt = { "yyyy":2015, "q":1 };
+    console.log(opt)
+    var fdicSdiQuarter = co(FdicSdiQuarter_factory());
+    fdicSdiQuarter.then(function(result){
+        console.log(result)
+        done()
+    })
+    console.log(fdicSdiQuarter)
 
     it('should take a qdate object in the constructor', function () {
 
