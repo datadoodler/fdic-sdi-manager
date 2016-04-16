@@ -16,6 +16,7 @@ describe('From index.html',function(){
 })
 
 describe('2- fdic-sdi-quarter module', function () {
+
     var qdate = new QDate(2015, 1);
     var fdicSdiQuarter = new FdicSdiQuarter(qdate);
 

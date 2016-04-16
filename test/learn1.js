@@ -7,13 +7,24 @@ var expect = chai.expect;
 var co = require('co');
 
 var fdicSdiQuarter_factory = require('../src/fdic-sdi-quarter');
-console.log('FdicSdiQuarter_factory',fdicSdiQuarter_factory)
 var FileHandler = require('../src/file-handler');
 var QDate = require('../src/q-date');
 var qDate = new QDate(2008, 4);
-var fdicSdiQuarter = co(fdicSdiQuarter_factory(qDate));
-//fdicSdiQuarter.extractZip();
+var fdicSdiQuarter;
+try {
+    fdicSdiQuarter = co(fdicSdiQuarter_factory(null, 2012, 4));
 
-fdicSdiQuarter.then(function (result) {
-    console.log('fdicSdiQuarter', result);
-});
+//fdicSdiQuarter.extractZip();
+    console.log('fdicSdiQuarter', fdicSdiQuarter);
+//console.log('typeof fdicSdiQuarter',typeof fdicSdiQuarter.then);
+//console.log('instance of?',fdicSdiQuarter instanceof Promise)
+    fdicSdiQuarter.then(function (fdicSdiQuarter) {
+        console.log('fdicSdiQuarter', fdicSdiQuarter.fname);
+    });
+
+}
+catch (e) {
+    console.log(`holy cow batman we have an error!`, e)
+}
+
+console.log('fdicSdiQuarter', fdicSdiQuarter);

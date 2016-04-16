@@ -4,20 +4,35 @@ var fs = require('fs');
 var config = require('config');
 var Datastore = require('nedb')
 var FileHandler = require('./file-handler.js');
-
+var QDate = require('./q-date')
 
 
 //var fdicSdiQuarter=co(fdicSdiQuarter_factory(qdate));
 
-module.exports = function *fdicSdiQuarter_factory(qdate) {
-    var newInstance = new FdicSdiQuarter(qdate);
-    newInstance.fname = yield getName('jj');
-    return newInstance;
-}
+module.exports = function *fdicSdiQuarter_factory(qdate, yyyy, q) {
+    try {
+        if (!qdate) {
+            qdate = new QDate(yyyy, q);
+            //console.log(qdate)
+        }
+        if (qdate.isValid) {
+            var fdicSdiQuarter = new FdicSdiQuarter(qdate);
 
-//export fdicSdiQuarter_factory;
+            //FILL ASYNC PROPERTIES FOR THIS INSTANCE
+            fdicSdiQuarter.fname = yield getName('jj');
+            return fdicSdiQuarter;
+        }
+        else {
+            throw qdate
+        }
+    }
+    catch (e) {
+        console.log("IN ERROR ", e)
+    }
+};
+
 function getName(name) {
-    console.log('in getName', name)
+    //console.log('in getName', name)
     //var x = [1, 2];
     //console.log('wheres the error?',x[3].name)
     var p = new Promise(function (resolve, rej) {
@@ -30,8 +45,8 @@ function getName(name) {
     });
     return p;
 }
-class FdicSdiQuarter {
 
+class FdicSdiQuarter {
 
     constructor(qdate) {
         this._qDate = qdate;
