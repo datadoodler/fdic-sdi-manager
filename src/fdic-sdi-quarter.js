@@ -8,17 +8,35 @@ var QDate = require('./q-date')
 
 
 //var fdicSdiQuarter=co(fdicSdiQuarter_factory(qdate));
+/**
+ * Things that need to happen
+ * Check if local data is persisted for this particular quarter.
+ *  * ETL state is persisted in this._db_etlState
+ *      - if it doesn't exist, create it and initialize properties as non-persisted value
+ *      - csvFilesArePersisted (bool)
+ *      - allVarsArePersisted (bool)
+ *  * List of CSV filenames along with various metadata (creation/extraction dates, size)
+ *      - this is held in this._db_csvFiles
+ *      - if this is
+ *  * List of all vars along with various metadata (file, varname, type, [max,min,avg,kurtosis,...]
+ *      - this is held in this._db_allVars
+ *      - (this may be deleted after the distinctVars table is created)
+ *  * List of distinct vars
+ *      - this is held in this._db_distinctVars
+ *
+ */
 
 module.exports = function *FdicSdiQuarter_factory(options) {
     const date = new Date();
     try {
         options = resolveOptions(options)
         var fdicSdiQuarter = new FdicSdiQuarter(options.yyyy, options.quarter);
-
+        //console.log(fdicSdiQuarter)
         //FILL ASYNC PROPERTIES FOR THIS INSTANCE
         fdicSdiQuarter.fname = yield getName('jj');
+        fdicSdiQuarter._successfulActions = yield hydrateSuccessfullActions(options.yyyy, options.quarter);
 
-
+        //console.log(fdicSdiQuarter)
         return fdicSdiQuarter;
 
     }
@@ -50,29 +68,14 @@ function getName(name) {
     return p;
 }
 
+const _filnames = ['a', 'b']
 class FdicSdiQuarter {
 
     constructor(year, quarter) {
-
+        this._year = year;
+        this._quarter = quarter;
         this._qDate = new QDate(year, quarter);
-
-        /**
-         * Things that need to happen
-         * Check if local data is persisted for this particular quarter.
-         *  * ETL state is persisted in this._db_etlState
-         *      - if it doesn't exist, create it and initialize properties as non-persisted value
-         *      - csvFilesArePersisted (bool)
-         *      - allVarsArePersisted (bool)
-         *  * List of CSV filenames along with various metadata (creation/extraction dates, size)
-         *      - this is held in this._db_csvFiles
-         *      - if this is
-         *  * List of all vars along with various metadata (file, varname, type, [max,min,avg,kurtosis,...]
-         *      - this is held in this._db_allVars
-         *      - (this may be deleted after the distinctVars table is created)
-         *  * List of distinct vars
-         *      - this is held in this._db_distinctVars
-         *
-         */
+        this._successfulActions = [];
 
 
         this._unzipped = false;
@@ -85,12 +88,26 @@ class FdicSdiQuarter {
         this._csvFilenames = [];
     }
 
+    getSuccessfulAction(actionName) {
+        return this._successfulActions.find(x=>x.key == actionName);
+    }
+
+    setSuccessfulAction(actionName) {
+        const idx = this._successfulActions.findIndex(x=>x.key == actionName);
+        if (idx > -1) {
+            this._successfulActions.splice(idx);
+        }
+        const dt = new Date();
+        const newObj = {key: actionName, dateComplete: dt.toString()};
+        this._successfulActions.push(newObj);
+        persistSuccessfulActions(this._successfulActions,this._year, this._quarter);
+    }
+
 
     //csv Files is a simple string array that is
     get csvFilenames() {
-        //console.log('this._csvFilenames;', this._csvFilenames)
+        console.log('this._csvFilenames;', this._csvFilenames)
         return this._csvFilenames;
-
     }
 
     get unzipped() {
@@ -99,7 +116,7 @@ class FdicSdiQuarter {
 
 
     get fname() {
-        return this._fname;
+        return 'k' + this._fname;
     }
 
     set fname(name) {
@@ -203,4 +220,52 @@ function getAllVarsDataStore(qdate) {
         autoload: false,
         timestampData: true
     });
+}
+
+
+/**
+ * If there have been successfull actions persisted, then return them as an array
+ * @param year
+ * @param quarter
+ */
+function hydrateSuccessfullActions(year, quarter) {
+    const dbfile = path.resolve(`${config.appDataLocation}/sdiSuccessfulActions_${year}_q${quarter}.db`)
+    console.log(dbfile)
+    let p = new Promise(function(resolve, reject){
+
+        var db = new Datastore({
+            filename: dbfile,
+            autoload: false,
+            timestampData: true
+        });
+
+        db.loadDatabase(function (err) {    // Callback is optional
+
+        });
+        db.find({}, function (err, docs) {
+            if (docs) {
+                console.log(docs.length)
+                resolve(docs)
+            }
+            if (err) {
+                throw err
+            }
+        });
+    });
+    return p;
+}
+
+function persistSuccessfulActions(successfullActionsArray,year, quarter) {
+    const dbfile = path.resolve(`${config.appDataLocation}/sdiSuccessfulActions_${year}_q${quarter}.db`)
+    var db = new Datastore({
+        filename: dbfile,
+        autoload: false,
+        timestampData: true
+    });
+
+    db.loadDatabase(function (err) {    // Callback is optional
+
+    });
+    db.insert(successfullActionsArray, function (err, newDocs) {
+    })
 }

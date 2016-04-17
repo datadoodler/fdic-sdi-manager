@@ -17,7 +17,7 @@ describe('From index.html', function () {
     })
 })
 
-describe.only('2- fdic-sdi-quarter module', function () {
+describe.only('2- fdic-sdi-quarter GETTERS AND SETTERS', function () {
     this.timeout(15000);
     var myFdicSdiQuarter;
     before(function (done) {
@@ -36,11 +36,22 @@ describe.only('2- fdic-sdi-quarter module', function () {
         console.log(myFdicSdiQuarter.fname)
     });
 
-    it('should take a qdate object in the constructor', function () {
+    it('options parameter has correct keys', function () {
+        let opts = {yyyy: 2015, quarter: 1, qdate: new QDate(2015, 1)}
 
-        expect(qdate).to.be.an.instanceof(QDate);
-
-        expect(fdicSdiQuarter).to.be.an.instanceof(FdicSdiQuarter);
+        expect(opts.qdate).to.be.an.instanceof(QDate);
+        var props = Object.getOwnPropertyNames(myFdicSdiQuarter)
+        console.log(props)
+        console.log(myFdicSdiQuarter.csvFilenames)
+        console.log(props.findIndex(x => x === "yyyy"))
+        const descriptor = Object.getOwnPropertyDescriptor(myFdicSdiQuarter, '_unzipped');
+console.log(descriptor)
+        expect(opts.hasOwnProperty('yyyy')).to.equal(true);
+        expect(myFdicSdiQuarter).to.be.an.instanceof(Object);
+        myFdicSdiQuarter.setSuccessfulAction('test')
+        myFdicSdiQuarter.setSuccessfulAction('test')
+        console.log(myFdicSdiQuarter._successfulActions)
+        console.log(myFdicSdiQuarter.getSuccessfulAction('test'))
     });
 
     describe('basic instance properties', function () {
@@ -69,7 +80,7 @@ describe.only('2- fdic-sdi-quarter module', function () {
             var qdateNotExist = new QDate(2015, 2);
             var fdicSdiQuarterNotExist = co(FdicSdiQuarter_factory({yyyy: 2015, quarter: 2}));
             fdicSdiQuarterNotExist.then(function (result) {
-                let myFdicSdiQuarterNotExists=result;
+                let myFdicSdiQuarterNotExists = result;
                 expect(myFdicSdiQuarterNotExists.stage1FileExists).to.be.false;
                 done()
             })
