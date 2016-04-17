@@ -10,40 +10,40 @@ var QDate = require('./q-date')
 //var fdicSdiQuarter=co(fdicSdiQuarter_factory(qdate));
 
 module.exports = function *FdicSdiQuarter_factory(options) {
-    var date = new Date();
-    options = options === undefined ? {} : options;
-    options.yyyy = options.yyyy === undefined ? date.getFullYear() : options.yyyy;
-    options.quarter = options.quarter === undefined ? 1 : options.quarter;
-    options.qdate = options.qdate === undefined ? new QDate(options.yyyy, options.quarter) : options.qdate;
-    console.log('opt here', options);
+    const date = new Date();
     try {
-        if (options.qdate.isValid) {
-            var fdicSdiQuarter = new FdicSdiQuarter(options.qdate);
+        options = resolveOptions(options)
+        var fdicSdiQuarter = new FdicSdiQuarter(options.yyyy, options.quarter);
 
-            //FILL ASYNC PROPERTIES FOR THIS INSTANCE
-            fdicSdiQuarter.fname = yield getName('jj');
+        //FILL ASYNC PROPERTIES FOR THIS INSTANCE
+        fdicSdiQuarter.fname = yield getName('jj');
 
 
-            return fdicSdiQuarter;
-        }
-        else {
-            throw qdate
-        }
+        return fdicSdiQuarter;
+
     }
     catch (e) {
         console.log("IN ERROR ", e)
     }
 };
 
+function resolveOptions(options) {
+    options = options === undefined ? {} : options;
+    options.yyyy = options.yyyy === undefined ? date.getFullYear() : options.yyyy;
+    options.quarter = options.quarter === undefined ? 1 : options.quarter;
+    options.qdate = options.qdate === undefined ? new QDate(options.yyyy, options.quarter) : options.qdate;
+    if (options.qdate.isValid) {
+        return options;
+    }
+    else {
+        throw 'qdate is invalid'
+    }
+}
+
 function getName(name) {
-    //console.log('in getName', name)
-    //var x = [1, 2];
-    //console.log('wheres the error?',x[3].name)
     var p = new Promise(function (resolve, rej) {
         setTimeout(function () {
-            console.log('leaving getName1', name)
             resolve(name)
-            console.log('leaving getName2', name)
         }, 2000)
 
     });
@@ -52,11 +52,10 @@ function getName(name) {
 
 class FdicSdiQuarter {
 
-    constructor(qdate) {
-        this._qDate = qdate;
-        this._fname = 'abc';
-        // This is a good place for a generator function to initialize the object with
-        // the necessary asynch operations.
+    constructor(year, quarter) {
+
+        this._qDate = new QDate(year, quarter);
+
         /**
          * Things that need to happen
          * Check if local data is persisted for this particular quarter.
@@ -81,19 +80,6 @@ class FdicSdiQuarter {
         //assume it is expanded to avoid performance hit of reading zip by default
         this._zipFileExpanded = true;
 
-        //nedb table for csvFiles for this quarter
-        this._db_csvFiles = new Datastore({
-            filename: path.join(config.appDataLocation, '/sdiCsvFiles_' + this._qDate.string + '.db'),
-            autoload: false,
-            timestampData: true
-        });
-
-        //nedb table for all variables in this quarter
-        this._db_allVars = new Datastore({
-            filename: path.join(config.appDataLocation, '/sdiAllVars_' + this._qDate.string + '.db'),
-            autoload: false,
-            timestampData: true
-        });
 
         //an array of filenames in the fdic quarter zip file
         this._csvFilenames = [];
@@ -102,7 +88,7 @@ class FdicSdiQuarter {
 
     //csv Files is a simple string array that is
     get csvFilenames() {
-        console.log('this._csvFilenames;', this._csvFilenames)
+        //console.log('this._csvFilenames;', this._csvFilenames)
         return this._csvFilenames;
 
     }
@@ -111,48 +97,6 @@ class FdicSdiQuarter {
         return this._unzipped;
     }
 
-    //csvFilenames(x){
-    //    FileHandler.getCompressedFileNames(this.stage1Filename).then(function (result) {
-    //        this._csvFilenames = result;
-    //    })
-    //}
-
-    persistCsvFilenames() {
-        var p = FileHandler.getCompressedFileNames(this.stage1Filename)
-            .then(function (result) {
-                for (let i = 0; i < result.length; i++) {
-                    let record = {filename: result[i]};
-                    //console.log(record);
-                    this.upsertCsvFile(result[i]);
-                    //this.csvFiles.insert(record, function (err,newDoc) {
-                    //    console.log(err,newDoc)
-                    //});
-                }
-            }.bind(this));
-        //this.db_csvFiles.insert({test: "abc"})
-    }
-
-    upsertCsvFile(filename) {
-        let query = {
-            filename: filename
-        };
-        let update = {
-            filename: filename
-        };
-        let options = {
-            upsert: true
-        };
-        let callback = function (err, numAffected, affectedDocuments, upsert) {
-            console.log('err', err, 'numAffected', numAffected, 'affectedDocuments', affectedDocuments, 'upsert', upsert)
-        };
-
-        this.csvFiles.update(query, update, options, callback);
-
-        //this.csvFiles.find(query,function(err,docs){
-        //    console.log('found ',docs)
-        //})
-
-    }
 
     get fname() {
         return this._fname;
@@ -192,20 +136,71 @@ class FdicSdiQuarter {
         }
         return false;
     }
+}
 
-    extractZip(force) {
-        //This is inherently an async operation
-        if (force) {
-            FileHandler.extractZippedFiles(this.stage1Filename, this.stage2Location).then(function (one, result) {
-                console.log('one', one);
-                console.log('result', result);
-            });
-        }
-        //console.log('FileHandler returns this', p)
-        //p.then(function(result){
-        //    console.log('then result',result)
-        //})
-        //return p;
+
+function extractZip(force) {
+    //This is inherently an async operation
+    if (force) {
+        FileHandler.extractZippedFiles(this.stage1Filename, this.stage2Location).then(function (one, result) {
+            console.log('result', result);
+        });
     }
 }
 
+function persistCsvFilenames() {
+    var p = FileHandler.getCompressedFileNames(this.stage1Filename)
+        .then(function (result) {
+            for (let i = 0; i < result.length; i++) {
+                let record = {filename: result[i]};
+                //console.log(record);
+                this.upsertCsvFile(result[i]);
+                //this.csvFiles.insert(record, function (err,newDoc) {
+                //    console.log(err,newDoc)
+                //});
+            }
+        }.bind(this));
+    //this.db_csvFiles.insert({test: "abc"})
+}
+
+function upsertCsvFile(filename) {
+    let query = {
+        filename: filename
+    };
+    let update = {
+        filename: filename
+    };
+    let options = {
+        upsert: true
+    };
+    let callback = function (err, numAffected, affectedDocuments, upsert) {
+        console.log('err', err, 'numAffected', numAffected, 'affectedDocuments', affectedDocuments, 'upsert', upsert)
+    };
+
+    this.csvFiles.update(query, update, options, callback);
+
+    //this.csvFiles.find(query,function(err,docs){
+    //    console.log('found ',docs)
+    //})
+
+}
+
+
+//nedb table for csvFiles for this quarter
+function getCsvFilesDataStore(qdate) {
+    return new Datastore({
+        filename: path.join(config.appDataLocation, '/sdiCsvFiles_' + qdate.string + '.db'),
+        autoload: false,
+        timestampData: true
+    });
+}
+
+
+//nedb table for all variables in this quarter
+function getAllVarsDataStore(qdate) {
+    return new Datastore({
+        filename: path.join(config.appDataLocation, '/sdiAllVars_' + qdate.string + '.db'),
+        autoload: false,
+        timestampData: true
+    });
+}
