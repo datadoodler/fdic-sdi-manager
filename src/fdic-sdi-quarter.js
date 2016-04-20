@@ -2,12 +2,12 @@
 var path = require('path');
 var fs = require('fs');
 var config = require('config');
-var Datastore = require('nedb')
+var database = require('./database');
+var logger = require('./logger');
 var FileHandler = require('./file-handler.js');
-var QDate = require('./q-date')
-
-
-//var fdicSdiQuarter=co(fdicSdiQuarter_factory(qdate));
+var QDate = require('./q-date');
+console.log(database);
+logger.silly('SUCCESSFULLY IMPORTED LOGGER');
 /**
  * Things that need to happen
  * Check if local data is persisted for this particular quarter.
@@ -27,68 +27,59 @@ var QDate = require('./q-date')
  */
 
 module.exports = function *FdicSdiQuarter_factory(options) {
+    logger.info("in fdicsdiqΩΩuarter generator with options before",options)
     const date = new Date();
     try {
-        options = resolveOptions(options)
-        var fdicSdiQuarter = new FdicSdiQuarter(options.yyyy, options.quarter);
-        //console.log(fdicSdiQuarter)
-        //FILL ASYNC PROPERTIES FOR THIS INSTANCE
-        fdicSdiQuarter.fname = yield getName('jj');
-        fdicSdiQuarter._successfulActions = yield hydrateSuccessfullActions(options.yyyy, options.quarter);
+        options = resolveOptions(options);
 
-        //console.log(fdicSdiQuarter)
+        var fdicSdiQuarter = new FdicSdiQuarter(options.year, options.quarter);
+
+        // GET INITIAL STATE - FILL ASYNC PROPERTIES FOR THIS INSTANCE
+        fdicSdiQuarter.fname = yield getName('jj');
+
+        fdicSdiQuarter._successfulActions = yield database.getPersistedSuccessfulActions(options.year, options.quarter);
+
+        //fdicSdiQuarter._csvFileMetadata = yield getCsvFileMetadata(options.year, options.quarter);
+
         return fdicSdiQuarter;
 
     }
     catch (e) {
-        console.log("IN ERROR ", e)
+        console.error("SOME ASYNC FUNCTION IN FdicSdiQuarter_factory GENERATOR", e)
     }
 };
 
-function resolveOptions(options) {
-    options = options === undefined ? {} : options;
-    options.yyyy = options.yyyy === undefined ? date.getFullYear() : options.yyyy;
-    options.quarter = options.quarter === undefined ? 1 : options.quarter;
-    options.qdate = options.qdate === undefined ? new QDate(options.yyyy, options.quarter) : options.qdate;
-    if (options.qdate.isValid) {
-        return options;
-    }
-    else {
-        throw 'qdate is invalid'
-    }
-}
 
-function getName(name) {
-    var p = new Promise(function (resolve, rej) {
-        setTimeout(function () {
-            resolve(name)
-        }, 2000)
 
-    });
-    return p;
-}
-
-const _filnames = ['a', 'b']
 class FdicSdiQuarter {
 
     constructor(year, quarter) {
         this._year = year;
         this._quarter = quarter;
         this._qDate = new QDate(year, quarter);
+
+        /*
+         --Actions
+         zipFileExists
+         zipFileExpanded
+         csvFilesTableFilled
+         allVarsMetadataTableFilled
+         distinctVarsMetadataTableFilled
+         variablePersisted(varName)
+         */
         this._successfulActions = [];
 
-
-        this._unzipped = false;
+        this._stage1FileExists = true;
 
         //assume it is expanded to avoid performance hit of reading zip by default
         this._zipFileExpanded = true;
 
 
         //an array of filenames in the fdic quarter zip file
-        this._csvFilenames = [];
+        this._csvFileMetadata = [];
     }
 
-    getSuccessfulAction(actionName) {
+    getSuccessfullAction(actionName) {
         return this._successfulActions.find(x=>x.key == actionName);
     }
 
@@ -100,18 +91,14 @@ class FdicSdiQuarter {
         const dt = new Date();
         const newObj = {key: actionName, dateComplete: dt.toString()};
         this._successfulActions.push(newObj);
-        persistSuccessfulActions(this._successfulActions,this._year, this._quarter);
+        database.persistSuccessfulActions(this._successfulActions, this._year, this._quarter);
     }
 
 
     //csv Files is a simple string array that is
-    get csvFilenames() {
-        console.log('this._csvFilenames;', this._csvFilenames)
-        return this._csvFilenames;
-    }
-
-    get unzipped() {
-        return this._unzipped;
+    get csvFileMetadata() {
+        //console.log('this._csvFilenames;', this._csvFileMetadata)
+        return this._csvFileMetadata;
     }
 
 
@@ -144,14 +131,28 @@ class FdicSdiQuarter {
     }
 
     get stage1FileExists() {
-        try {
-            fs.statSync(this.stage1Filename);
-            return true;
-        }
-        catch (err) {
-            return false
-        }
-        return false;
+        return this._stage1FileExists
+    }
+
+    set stage1FileExists(val) {
+        this._stage1FileExists = val;
+    }
+}
+
+
+
+
+
+function resolveOptions(options) {
+    options = options === undefined ? {} : options;
+    options.year = options.year === undefined ? date.getFullYear() : options.year;
+    options.quarter = options.quarter === undefined ? 1 : options.quarter;
+    options.qdate = options.qdate === undefined ? new QDate(options.year, options.quarter) : options.qdate;
+    if (options.qdate.isValid) {
+        return options;
+    }
+    else {
+        throw 'qdate is invalid'
     }
 }
 
@@ -203,6 +204,42 @@ function upsertCsvFile(filename) {
 }
 
 
+//EXPECT A PERFORMANCE HIT FOR EXTRACTING THE ZIP FILE THE FIRST TIME FUNCTION RUNS
+function getCsvFileMetadata(year,quarter) {
+    const dbfile = path.resolve(`${config.appDataLocation}/sdiCsvFileMeta_${year}_q${quarter}.db`)
+    //console.log(dbfile)
+    let p = new Promise(function (resolve, reject) {
+
+        //FIRST, SEARCH FOR PERSISTED METADATA IN DATABASE
+        var db = new Datastore({
+            filename: dbfile,
+            autoload: false,
+            timestampData: true
+        });
+
+        db.loadDatabase(function (err) {
+            console.log(err)
+        });
+        db.find({}, function (err, docs) {
+            //METADATA FOUND IN DATABASE
+            if (docs && docs.length > 0) {
+                //console.log(docs.length)
+                resolve(docs)
+            }
+            //METADATA NOT FOUND IN DATABASE, EXTRACT CSV FILE
+            if (docs && docs.length === 0) {
+                //console.log(docs.length)
+                resolve(docs)
+            }
+            if (err) {
+                throw err
+                resolve(false)
+            }
+        });
+
+    })
+    return p
+}
 //nedb table for csvFiles for this quarter
 function getCsvFilesDataStore(qdate) {
     return new Datastore({
@@ -224,48 +261,18 @@ function getAllVarsDataStore(qdate) {
 
 
 /**
- * If there have been successfull actions persisted, then return them as an array
+ * If there have been successful actions persisted, then return them as an array
  * @param year
  * @param quarter
  */
-function hydrateSuccessfullActions(year, quarter) {
-    const dbfile = path.resolve(`${config.appDataLocation}/sdiSuccessfulActions_${year}_q${quarter}.db`)
-    console.log(dbfile)
-    let p = new Promise(function(resolve, reject){
 
-        var db = new Datastore({
-            filename: dbfile,
-            autoload: false,
-            timestampData: true
-        });
 
-        db.loadDatabase(function (err) {    // Callback is optional
+function getName(name) {
+    var p = new Promise(function (resolve, rej) {
+        setTimeout(function () {
+            resolve(name)
+        }, 2000)
 
-        });
-        db.find({}, function (err, docs) {
-            if (docs) {
-                console.log(docs.length)
-                resolve(docs)
-            }
-            if (err) {
-                throw err
-            }
-        });
     });
     return p;
-}
-
-function persistSuccessfulActions(successfullActionsArray,year, quarter) {
-    const dbfile = path.resolve(`${config.appDataLocation}/sdiSuccessfulActions_${year}_q${quarter}.db`)
-    var db = new Datastore({
-        filename: dbfile,
-        autoload: false,
-        timestampData: true
-    });
-
-    db.loadDatabase(function (err) {    // Callback is optional
-
-    });
-    db.insert(successfullActionsArray, function (err, newDocs) {
-    })
 }

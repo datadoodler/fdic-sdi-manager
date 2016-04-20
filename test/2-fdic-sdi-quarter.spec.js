@@ -11,47 +11,38 @@ var FdicSdiQuarter_factory = require('../src/fdic-sdi-quarter');
 var QDate = require('../src/q-date.js');
 
 
-describe('From index.html', function () {
-    it('inserts files into database', function () {
-        var fm = require('../index.js')
-    })
-})
-
-describe.only('2- fdic-sdi-quarter GETTERS AND SETTERS', function () {
+describe.only('fdic-sdi-quarter - With Valid QDate - GETTERS AND SETTERS', function () {
     this.timeout(15000);
     var myFdicSdiQuarter;
     before(function (done) {
 
-        var options = {yyyy: 2015, quarter: 1};
+        var options = {year: 2015, quarter: 1};
 
         var fdicSdiQuarter = co(FdicSdiQuarter_factory(options));
-        console.log(fdicSdiQuarter);
+        //console.log("This is fdic quarter in 2 ",fdicSdiQuarter);
         fdicSdiQuarter.then(function (result) {
             myFdicSdiQuarter = result;
+            //console.log(result);
             done()
         })
     });
     it('instantiates', function () {
         expect(myFdicSdiQuarter).to.exist
-        console.log(myFdicSdiQuarter.fname)
+        // console.log(myFdicSdiQuarter.fname)
     });
 
     it('options parameter has correct keys', function () {
-        let opts = {yyyy: 2015, quarter: 1, qdate: new QDate(2015, 1)}
-
-        expect(opts.qdate).to.be.an.instanceof(QDate);
         var props = Object.getOwnPropertyNames(myFdicSdiQuarter)
-        console.log(props)
-        console.log(myFdicSdiQuarter.csvFilenames)
-        console.log(props.findIndex(x => x === "yyyy"))
-        const descriptor = Object.getOwnPropertyDescriptor(myFdicSdiQuarter, '_unzipped');
-console.log(descriptor)
-        expect(opts.hasOwnProperty('yyyy')).to.equal(true);
+        //console.log(props)
+        //console.log(myFdicSdiQuarter.csvFileMetadata)
+        //console.log(props.findIndex(x => x === "yyyy"))
+        const descriptor = Object.getOwnPropertyDescriptor(myFdicSdiQuarter, '_qDate');
+        //console.log(descriptor)
         expect(myFdicSdiQuarter).to.be.an.instanceof(Object);
         myFdicSdiQuarter.setSuccessfulAction('test')
         myFdicSdiQuarter.setSuccessfulAction('test')
-        console.log(myFdicSdiQuarter._successfulActions)
-        console.log(myFdicSdiQuarter.getSuccessfulAction('test'))
+        //console.log(myFdicSdiQuarter._successfulActions)
+        //console.log(myFdicSdiQuarter.getSuccessfullAction('test'))
     });
 
     describe('basic instance properties', function () {
@@ -75,29 +66,24 @@ console.log(descriptor)
             expect(typeof myFdicSdiQuarter.zipFileExpanded).to.equal('boolean')
         });
 
-        it('stage1FileExists property (bool)', function (done) {
+        it('stage1FileExists property (bool)', function () {
+            console.log(myFdicSdiQuarter.stage1FileExists);
             expect(myFdicSdiQuarter.stage1FileExists).to.be.true;
-            var qdateNotExist = new QDate(2015, 2);
-            var fdicSdiQuarterNotExist = co(FdicSdiQuarter_factory({yyyy: 2015, quarter: 2}));
-            fdicSdiQuarterNotExist.then(function (result) {
-                let myFdicSdiQuarterNotExists = result;
-                expect(myFdicSdiQuarterNotExists.stage1FileExists).to.be.false;
-                done()
-            })
+
         });
 
         it('csvFilenames property should be empty array when object first initialized', function () {
-            const newFdicQuarter = new FdicSdiQuarter(2012, 1);
-            expect(newFdicQuarter.csvFilenames).to.be.empty;
-            expect(newFdicQuarter.csvFilenames).to.be.an('Array');
+            expect(myFdicSdiQuarter.csvFileMetadata).to.be.empty;
+            expect(myFdicSdiQuarter.csvFileMetadata).to.be.an('Array');
         });
-        it('should have a unzipped property (bool)', function () {
-            expect(typeof fdicSdiQuarter.unzipped).to.equal('boolean')
+
+        it('should have a zipFileExpanded property (bool)', function () {
+            expect(typeof myFdicSdiQuarter.zipFileExpanded).to.equal('boolean')
         });
 
     });
 
-    describe('csvFiles database-related methods', function () {
+    describe.skip('csvFiles database-related methods', function () {
 
         it('extractZip method exists', function () {
             expect(fdicSdiQuarter.extractZip).to.exist;
@@ -109,7 +95,7 @@ console.log(descriptor)
         })
 
         it.skip('csvFilenames property exists', function () {
-            expect(fdicSdiQuarter.csvFilenames).to.be.an('array');
+            expect(fdicSdiQuarter.csvFileMetadata).to.be.an('array');
             fdicSdiQuarter.persistCsvFilenames(function (rslt, b) {
                 console.log(rslt, b)
             });
@@ -130,3 +116,37 @@ console.log(descriptor)
         })
     })
 })
+
+describe('fdic-sdi-quarter - ZIP FILE HAS NOT BEEN EXPANDED', function () {
+    this.timeout(15000);
+    var myFdicSdiQuarter;
+    var options = {year: 2015, quarter: 1};
+
+    before(function (done) {
+        removeAppData(options.year, options.quarter, function (result) {
+            done();
+        })
+    })
+
+    before(function (done) {
+
+        var options = {year: 2015, quarter: 1};
+
+        var fdicSdiQuarter = co(FdicSdiQuarter_factory(options));
+        //console.log("This is fdic quarter in 2 ",fdicSdiQuarter);
+        fdicSdiQuarter.then(function (result) {
+            myFdicSdiQuarter = result;
+            //console.log(result);
+            done()
+        })
+    });
+    it('instantiates', function () {
+        expect(myFdicSdiQuarter).to.exist
+        // console.log(myFdicSdiQuarter.fname)
+    });
+})
+
+
+function removeAppData(year, quarter, cb) {
+    cb()
+}
