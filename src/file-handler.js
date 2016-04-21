@@ -28,7 +28,8 @@ function fileExists(path, cb) {
 }
 
 
-function extractZippedFiles(pathToFile, destinationFolder) {
+function extractZippedFiles(pathToFile, year, quarter) {
+    var destinationFolder=path.resolve(`${config(stage2Location)}/${year}_q${quarter}`)
     var p = new Promise(function (resolve, reject) {
         function handleErr() {
             resolve([])

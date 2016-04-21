@@ -4,6 +4,9 @@ var fs = require('fs');
 var chai = require('chai');
 var expect = chai.expect;
 
+var rimraf = require('rimraf');
+
+
 var config = require('config');
 var co = require('co')
 
@@ -11,7 +14,7 @@ var FdicSdiQuarter_factory = require('../src/fdic-sdi-quarter');
 var QDate = require('../src/q-date.js');
 
 
-describe.only('fdic-sdi-quarter - With Valid QDate - GETTERS AND SETTERS', function () {
+describe.skip('fdic-sdi-quarter - With Valid QDate - GETTERS AND SETTERS', function () {
     this.timeout(15000);
     var myFdicSdiQuarter;
     before(function (done) {
@@ -117,7 +120,7 @@ describe.only('fdic-sdi-quarter - With Valid QDate - GETTERS AND SETTERS', funct
     })
 })
 
-describe('fdic-sdi-quarter - ZIP FILE HAS NOT BEEN EXPANDED', function () {
+describe.only('fdic-sdi-quarter - ZIP FILE HAS NOT BEEN EXPANDED', function () {
     this.timeout(15000);
     var myFdicSdiQuarter;
     var options = {year: 2015, quarter: 1};
@@ -128,25 +131,80 @@ describe('fdic-sdi-quarter - ZIP FILE HAS NOT BEEN EXPANDED', function () {
         })
     })
 
-    before(function (done) {
 
-        var options = {year: 2015, quarter: 1};
+    describe('initial state', function () {
 
-        var fdicSdiQuarter = co(FdicSdiQuarter_factory(options));
-        //console.log("This is fdic quarter in 2 ",fdicSdiQuarter);
-        fdicSdiQuarter.then(function (result) {
-            myFdicSdiQuarter = result;
-            //console.log(result);
-            done()
-        })
-    });
-    it('instantiates', function () {
-        expect(myFdicSdiQuarter).to.exist
-        // console.log(myFdicSdiQuarter.fname)
-    });
-})
+        it('remove app data', function (done) {
+            removeAppData(options.year, options.quarter, function (result) {
+                var appDatafolder = path.resolve(`${config.appDataLocation}/${options.year}_q${options.quarter}`)
+                fs.stat(appDatafolder, function (err, stats) {
+                    //Check if error defined and the error code is "not exists"
+                    console.log(err)
+                    console.log(stats)
+                    expect(err && err.errno === -2).to.be.true;
+                    done();
+                });
+            });
+        });
+
+        it('remove stage2 data', function (done) {
+            removeStage2Data(options.year, options.quarter, function (result) {
+                var appDatafolder = path.resolve(`${config.stage2Location}/${options.year}_q${options.quarter}`)
+                fs.stat(appDatafolder, function (err, stats) {
+                    //Check if error defined and the error code is "not exists"
+                    console.log(err)
+                    console.log(stats)
+                    expect(err && err.errno === -2).to.be.true;
+                    done();
+                });
+            });
+        });
+
+
+        it('starts with no data in appData', function (done) {
+            var appDatafolder = path.resolve(`${config.appDataLocation}/${options.year}_q${options.quarter}`)
+            fs.stat(appDatafolder, function (err, stats) {
+                //Check if error defined and the error code is "not exists"
+                console.log(err)
+                console.log(stats)
+                expect(err && err.errno === -2).to.be.true;
+                done()
+            });
+        });
+
+        it('Existing quarter initialization', function (done) {
+            //var options = {year: 2015, quarter: 1};
+
+            var fdicSdiQuarter = co(FdicSdiQuarter_factory(options));
+            console.log("This is fdic quarter in 2 ", fdicSdiQuarter);
+            fdicSdiQuarter.then(function (result) {
+                myFdicSdiQuarter = result;
+                //    //console.log(result);
+                done()
+            })
+        });
+        it('instantiates', function () {
+            expect(myFdicSdiQuarter).to.exist
+            // console.log(myFdicSdiQuarter.fname)
+        });
+        it('should expand zip file on initialization')
+    })
+});
 
 
 function removeAppData(year, quarter, cb) {
-    cb()
+    var appDatafolder = path.resolve(`${config.appDataLocation}/${year}_q${quarter}`)
+    console.log(appDatafolder)
+    rimraf(appDatafolder, function (err) {
+        if (!err) {
+            cb()
+        }
+        else {
+            throw "Error deleting appData";
+        }
+    })
+}
+
+function removeStage2Data(year, quarter, cb) {
+
 }
