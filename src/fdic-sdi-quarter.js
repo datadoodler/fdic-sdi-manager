@@ -27,7 +27,7 @@ var QDate = require('./q-date');
  */
 
 
-function *fdicSdiQuarter_factory(options) {
+function* fdicSdiQuarter_factory(options) {
 
     const date = new Date();
 
@@ -37,11 +37,16 @@ function *fdicSdiQuarter_factory(options) {
         var fdicSdiQuarter = new FdicSdiQuarter(options.year, options.quarter);
 
         // GET INITIAL STATE - FILL ASYNC PROPERTIES FOR THIS INSTANCE
-
+        fdicSdiQuarter._stage1FileExists = yield FileHandler.fileExists(fdicSdiQuarter.stage1Filename);
         fdicSdiQuarter._successfulActions = yield database.getPersistedSuccessfulActions(options.year, options.quarter);
 
-        //fdicSdiQuarter._csvFileMetadata = yield getCsvFileMetadata(options.year, options.quarter);
-
+        fdicSdiQuarter._csvFileMetadata = yield getCsvFileMetadata(options.year, options.quarter);
+        console.log(fdicSdiQuarter._csvFileMetadata);
+        console.log(fdicSdiQuarter.stage1Filename)
+        console.log(fdicSdiQuarter.stage1FileExists)
+        if(fdicSdiQuarter._csvFileMetadata.length===0 && fdicSdiQuarter.stage1FileExists){
+            extractZip(fdicSdiQuarter.stage1Filename,getCsvFolder(options.year,options.quarter))
+        }
         return fdicSdiQuarter;
     }
 
@@ -142,14 +147,13 @@ function resolveOptions(options) {
 }
 
 
-function extractZip(force) {
+function extractZip(filename,destinationFolder) {
     //This is inherently an async operation
-    if (force) {
-        FileHandler.extractZippedFiles(this.stage1Filename)
-            .then(function (one, result) {
-                console.log('result', one, result);
-            });
-    }
+    //console.log(filename)
+    FileHandler.extractZippedFiles(filename,destinationFolder)
+        .then(function (one, result) {
+            console.log('result', one, result);
+        });
 }
 
 function persistCsvFilenames() {
@@ -190,8 +194,8 @@ function getCsvFileMetadata(year, quarter) {
     let p = new Promise(function (resolve, reject) {
 
         //FIRST, SEARCH FOR PERSISTED METADATA IN DATABASE
-        var db = getLocalState_CsvFiles(year, quarter)
-
+        var db = database.getLocalState_CsvMetadata(year, quarter)
+        //console.log(db);
 
         db.find({}, function (err, docs) {
             //METADATA FOUND IN DATABASE
@@ -212,25 +216,6 @@ function getCsvFileMetadata(year, quarter) {
 
     })
     return p
-}
-
-
-/**
- *
- * @returns {Datastore}
- * @param year
- * @param quarter
- */
-function getLocalState_CsvFiles(year, quarter) {
-    var db = new Datastore({
-        filename: path.join(getLocalStateFolder(year, quarter), '/localState_CsvFiles.db'),
-        autoload: false,
-        timestampData: true
-    });
-    db.loadDatabase(function (err) {
-        logger.error(err)
-    });
-    return db;
 }
 
 
@@ -259,9 +244,9 @@ function getLocalState_AllVars(year, quarter) {
  * @param year
  * @param quarter
  */
-function getLocalStateFolder(year, quarter) {
-    var appDatafolder = path.resolve(`${config.appDataLocation}/${year}_q${quarter}`)
-    return appDatafolder;
+function getCsvFolder(year, quarter) {
+    var csvFolder = path.resolve(`${config.stage2Location}/${year}_q${quarter}`);
+    return csvFolder;
 }
 
 
@@ -287,7 +272,7 @@ function resetLocalState(year, quarter, cb) {
 
 module.exports = {
     fdicSdiQuarter_factory,
-    getLocalStateFolder,
     getLocalState_AllVars,
+    getCsvFolder,
     resetLocalState
 };

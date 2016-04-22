@@ -1,12 +1,13 @@
 'use strict';
 var fs = require('fs');
 var path = require('path');
-
+var config = require('config')
 
 var yauzl = require("yauzl");
 
 
 function fileExists(path, cb) {
+    console.log(path)
     var p = new Promise(function (resolve, reject) {
         fs.stat(path, function (err, stats) {
             if (err) {
@@ -15,7 +16,8 @@ function fileExists(path, cb) {
                 }
                 resolve(false)
             }
-            if (stats && stats.isFile) {
+            if (stats && stats.isFile()) {
+                //console.log(stats.isFile())
                 if (cb) {
                     cb(true)
                 }
@@ -28,8 +30,10 @@ function fileExists(path, cb) {
 }
 
 
-function extractZippedFiles(pathToFile, year, quarter) {
-    var destinationFolder=path.resolve(`${config(stage2Location)}/${year}_q${quarter}`)
+function extractZippedFiles(pathToFile, destinationFolder) {
+    console.log(pathToFile)
+    console.log(destinationFolder)
+    var destinationFolder=path.resolve(destinationFolder)
     var p = new Promise(function (resolve, reject) {
         function handleErr() {
             resolve([])
