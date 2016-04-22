@@ -5,7 +5,7 @@ var Datastore = require('nedb');
 const logger = require('./logger');
 
 
-getPersistedSuccessfulActions(2012,1);
+getPersistedSuccessfulActions(2012, 1);
 function getPersistedSuccessfulActions(year, quarter) {
     const dbfile = path.resolve(`${config.appDataLocation}/${year}_q${quarter}/sdiSuccessfulActions_${year}_q${quarter}.db`);
 
@@ -16,7 +16,6 @@ function getPersistedSuccessfulActions(year, quarter) {
             autoload: false,
             timestampData: true
         });
-console.log(db)
         db.loadDatabase(function (err) {    // Callback is optional
 
         });
@@ -50,8 +49,7 @@ function persistSuccessfulActions(successfullActionsArray, year, quarter) {
 }
 
 
-
-module.exports={
+module.exports = {
     getPersistedSuccessfulActions,
     persistSuccessfulActions
 };

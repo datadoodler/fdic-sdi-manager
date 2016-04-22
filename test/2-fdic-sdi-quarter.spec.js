@@ -4,13 +4,11 @@ var fs = require('fs');
 var chai = require('chai');
 var expect = chai.expect;
 
-var rimraf = require('rimraf');
-
 
 var config = require('config');
 var co = require('co')
 
-var FdicSdiQuarter_factory = require('../src/fdic-sdi-quarter');
+var FdicSdiQuarterModule = require('../src/fdic-sdi-quarter');
 var QDate = require('../src/q-date.js');
 
 
@@ -21,7 +19,7 @@ describe.skip('fdic-sdi-quarter - With Valid QDate - GETTERS AND SETTERS', funct
 
         var options = {year: 2015, quarter: 1};
 
-        var fdicSdiQuarter = co(FdicSdiQuarter_factory(options));
+        var fdicSdiQuarter = co(FdicSdiQuarterModule.fdicSdiQuarter_factory(options));
         //console.log("This is fdic quarter in 2 ",fdicSdiQuarter);
         fdicSdiQuarter.then(function (result) {
             myFdicSdiQuarter = result;
@@ -29,6 +27,7 @@ describe.skip('fdic-sdi-quarter - With Valid QDate - GETTERS AND SETTERS', funct
             done()
         })
     });
+
     it('instantiates', function () {
         expect(myFdicSdiQuarter).to.exist
         // console.log(myFdicSdiQuarter.fname)
@@ -48,16 +47,10 @@ describe.skip('fdic-sdi-quarter - With Valid QDate - GETTERS AND SETTERS', funct
         //console.log(myFdicSdiQuarter.getSuccessfullAction('test'))
     });
 
-    describe('basic instance properties', function () {
+    describe.skip('basic instance properties', function () {
 
         it('qDate property of type QDate', function () {
             expect(myFdicSdiQuarter.qDate).to.be.an.instanceof(QDate)
-        });
-
-        it('stage1Location property assigned in configuartion', function () {
-            var stage1Location_conf = config.stage1Location;
-            expect(stage1Location_conf.length).to.be.above(0);
-            expect(myFdicSdiQuarter.stage1Location).to.be.equal(stage1Location_conf);
         });
 
         it('stage1Filename property derived from qDate and stage1Location', function () {
@@ -70,9 +63,7 @@ describe.skip('fdic-sdi-quarter - With Valid QDate - GETTERS AND SETTERS', funct
         });
 
         it('stage1FileExists property (bool)', function () {
-            console.log(myFdicSdiQuarter.stage1FileExists);
             expect(myFdicSdiQuarter.stage1FileExists).to.be.true;
-
         });
 
         it('csvFilenames property should be empty array when object first initialized', function () {
@@ -86,16 +77,12 @@ describe.skip('fdic-sdi-quarter - With Valid QDate - GETTERS AND SETTERS', funct
 
     });
 
+
     describe.skip('csvFiles database-related methods', function () {
 
-        it('extractZip method exists', function () {
+        it('extractZip - If a file starts u', function () {
             expect(fdicSdiQuarter.extractZip).to.exist;
         });
-
-        it('extractZip method actually extracts files', function () {
-            fdicSdiQuarter.extractZip();
-            //WARNING: This method should be skipped most of the time due to perf hit.
-        })
 
         it.skip('csvFilenames property exists', function () {
             expect(fdicSdiQuarter.csvFileMetadata).to.be.an('array');
@@ -120,91 +107,61 @@ describe.skip('fdic-sdi-quarter - With Valid QDate - GETTERS AND SETTERS', funct
     })
 })
 
+
 describe.only('fdic-sdi-quarter - ZIP FILE HAS NOT BEEN EXPANDED', function () {
     this.timeout(15000);
     var myFdicSdiQuarter;
-    var options = {year: 2015, quarter: 1};
+    var options = {year: 2008, quarter: 4};
 
+    //delete all corresponding nedb tables
     before(function (done) {
-        removeAppData(options.year, options.quarter, function (result) {
+        FdicSdiQuarterModule.resetLocalState(options.year, options.quarter, function (result) {
             done();
         })
     })
-
-
-    describe('initial state', function () {
-
-        it('remove app data', function (done) {
-            removeAppData(options.year, options.quarter, function (result) {
-                var appDatafolder = path.resolve(`${config.appDataLocation}/${options.year}_q${options.quarter}`)
-                fs.stat(appDatafolder, function (err, stats) {
-                    //Check if error defined and the error code is "not exists"
-                    console.log(err)
-                    console.log(stats)
-                    expect(err && err.errno === -2).to.be.true;
-                    done();
-                });
-            });
-        });
-
-        it('remove stage2 data', function (done) {
-            removeStage2Data(options.year, options.quarter, function (result) {
-                var appDatafolder = path.resolve(`${config.stage2Location}/${options.year}_q${options.quarter}`)
-                fs.stat(appDatafolder, function (err, stats) {
-                    //Check if error defined and the error code is "not exists"
-                    console.log(err)
-                    console.log(stats)
-                    expect(err && err.errno === -2).to.be.true;
-                    done();
-                });
-            });
-        });
-
-
-        it('starts with no data in appData', function (done) {
-            var appDatafolder = path.resolve(`${config.appDataLocation}/${options.year}_q${options.quarter}`)
+    describe('If the zip file has not been unzipped it should be unzipped on instatiation', function () {
+        it('app data should not exist at this point', function (done) {
+            var appDatafolder = FdicSdiQuarterModule.getLocalStateFolder(options.year,options.quarter);
+            console.log(appDatafolder)
             fs.stat(appDatafolder, function (err, stats) {
-                //Check if error defined and the error code is "not exists"
-                console.log(err)
-                console.log(stats)
                 expect(err && err.errno === -2).to.be.true;
-                done()
+                done();
             });
         });
 
-        it('Existing quarter initialization', function (done) {
-            //var options = {year: 2015, quarter: 1};
+        it('csv files should not exist at this point', function () {
+            expect()
+        })
 
-            var fdicSdiQuarter = co(FdicSdiQuarter_factory(options));
-            console.log("This is fdic quarter in 2 ", fdicSdiQuarter);
-            fdicSdiQuarter.then(function (result) {
-                myFdicSdiQuarter = result;
-                //    //console.log(result);
-                done()
-            })
-        });
-        it('instantiates', function () {
-            expect(myFdicSdiQuarter).to.exist
-            // console.log(myFdicSdiQuarter.fname)
-        });
-        it('should expand zip file on initialization')
     })
-});
+})
 
 
-function removeAppData(year, quarter, cb) {
-    var appDatafolder = path.resolve(`${config.appDataLocation}/${year}_q${quarter}`)
-    console.log(appDatafolder)
-    rimraf(appDatafolder, function (err) {
-        if (!err) {
-            cb()
-        }
-        else {
-            throw "Error deleting appData";
-        }
-    })
-}
 
-function removeStage2Data(year, quarter, cb) {
+describe('initial state', function () {
 
-}
+
+    it('starts with no data in appData', function (done) {
+        var appDatafolder = path.resolve(`${config.appDataLocation}/${options.year}_q${options.quarter}`)
+        fs.stat(appDatafolder, function (err, stats) {
+            //Check if error defined and the error code is "not exists"
+            //console.log(err)
+            //console.log(stats)
+            expect(err && err.errno === -2).to.be.true;
+            done()
+        });
+    });
+
+    it('Existing quarter initialization', function (done) {
+        //var options = {year: 2015, quarter: 1};
+
+        var fdicSdiQuarter = co(FdicSdiQuarterModule.fdicSdiQuarter_factory(options));
+        //console.log("This is fdic quarter in 2 ", fdicSdiQuarter);
+    });
+
+    it('instantiates', function () {
+        expect(myFdicSdiQuarter).to.exist
+        // console.log(myFdicSdiQuarter.fname)
+    });
+    it('should expand zip file on initialization')
+})

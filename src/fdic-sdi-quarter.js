@@ -3,11 +3,11 @@ var path = require('path');
 var fs = require('fs');
 var config = require('config');
 var database = require('./database');
+var rimraf = require('rimraf');
 var logger = require('./logger');
 var FileHandler = require('./file-handler.js');
 var QDate = require('./q-date');
-console.log(database);
-logger.silly('SUCCESSFULLY IMPORTED LOGGER');
+
 /**
  * Things that need to happen
  * Check if local data is persisted for this particular quarter.
@@ -26,29 +26,30 @@ logger.silly('SUCCESSFULLY IMPORTED LOGGER');
  *
  */
 
-module.exports = function *FdicSdiQuarter_factory(options) {
-    logger.info("in fdicsdiqΩΩuarter generator with options before",options)
+
+function *fdicSdiQuarter_factory(options) {
+
     const date = new Date();
+
     try {
         options = resolveOptions(options);
 
         var fdicSdiQuarter = new FdicSdiQuarter(options.year, options.quarter);
 
         // GET INITIAL STATE - FILL ASYNC PROPERTIES FOR THIS INSTANCE
-        fdicSdiQuarter.fname = yield getName('jj');
 
         fdicSdiQuarter._successfulActions = yield database.getPersistedSuccessfulActions(options.year, options.quarter);
 
         //fdicSdiQuarter._csvFileMetadata = yield getCsvFileMetadata(options.year, options.quarter);
 
         return fdicSdiQuarter;
-
     }
+
     catch (e) {
-        console.error("SOME ASYNC FUNCTION IN FdicSdiQuarter_factory GENERATOR", e)
+        logger.error("SOME ASYNC FUNCTION IN FdicSdiQuarter_factory GENERATOR", e)
     }
-};
 
+};
 
 
 class FdicSdiQuarter {
@@ -101,15 +102,6 @@ class FdicSdiQuarter {
         return this._csvFileMetadata;
     }
 
-
-    get fname() {
-        return 'k' + this._fname;
-    }
-
-    set fname(name) {
-        this._fname = name;
-    }
-
     get qDate() {
         return this._qDate;
     }
@@ -119,7 +111,7 @@ class FdicSdiQuarter {
     }
 
     get stage1Filename() {
-       // return path.join(this.stage1Location, '/All_Reports_' + this._qDate.string + '.zip')
+        // return path.join(this.stage1Location, '/All_Reports_' + this._qDate.string + '.zip')
         return path.join(config.stage1Location, '/All_Reports_' + this._qDate.string + '.zip')
 
     }
@@ -131,10 +123,9 @@ class FdicSdiQuarter {
     set stage1FileExists(val) {
         this._stage1FileExists = val;
     }
+
+
 }
-
-
-
 
 
 function resolveOptions(options) {
@@ -156,8 +147,8 @@ function extractZip(force) {
     if (force) {
         FileHandler.extractZippedFiles(this.stage1Filename)
             .then(function (one, result) {
-            console.log('result', result);
-        });
+                console.log('result', one, result);
+            });
     }
 }
 
@@ -191,30 +182,17 @@ function upsertCsvFile(filename) {
     };
 
     this.csvFiles.update(query, update, options, callback);
-
-    //this.csvFiles.find(query,function(err,docs){
-    //    console.log('found ',docs)
-    //})
-
 }
 
 
 //EXPECT A PERFORMANCE HIT FOR EXTRACTING THE ZIP FILE THE FIRST TIME FUNCTION RUNS
-function getCsvFileMetadata(year,quarter) {
-    const dbfile = path.resolve(`${config.appDataLocation}/sdiCsvFileMeta_${year}_q${quarter}.db`)
-    //console.log(dbfile)
+function getCsvFileMetadata(year, quarter) {
     let p = new Promise(function (resolve, reject) {
 
         //FIRST, SEARCH FOR PERSISTED METADATA IN DATABASE
-        var db = new Datastore({
-            filename: dbfile,
-            autoload: false,
-            timestampData: true
-        });
+        var db = getLocalState_CsvFiles(year, quarter)
 
-        db.loadDatabase(function (err) {
-            console.log(err)
-        });
+
         db.find({}, function (err, docs) {
             //METADATA FOUND IN DATABASE
             if (docs && docs.length > 0) {
@@ -235,39 +213,81 @@ function getCsvFileMetadata(year,quarter) {
     })
     return p
 }
-//nedb table for csvFiles for this quarter
-function getCsvFilesDataStore(qdate) {
-    return new Datastore({
-        filename: path.join(config.appDataLocation, '/sdiCsvFiles_' + qdate.string + '.db'),
+
+
+/**
+ *
+ * @returns {Datastore}
+ * @param year
+ * @param quarter
+ */
+function getLocalState_CsvFiles(year, quarter) {
+    var db = new Datastore({
+        filename: path.join(getLocalStateFolder(year, quarter), '/localState_CsvFiles.db'),
         autoload: false,
         timestampData: true
     });
+    db.loadDatabase(function (err) {
+        logger.error(err)
+    });
+    return db;
 }
 
 
 //nedb table for all variables in this quarter
-function getAllVarsDataStore(qdate) {
-    return new Datastore({
-        filename: path.join(config.appDataLocation, '/sdiAllVars_' + qdate.string + '.db'),
+/**
+ *
+ * @param year
+ * @param quarter
+ * @returns {Datastore}
+ */
+function getLocalState_AllVars(year, quarter) {
+    var db = new Datastore({
+        filename: path.join(getLocalStateFolder(year, quarter), '/localState_AllVars.db'),
         autoload: false,
         timestampData: true
+    })
+    db.loadDatabase(function (err) {
+        logger.error(err)
     });
+    return db;
 }
 
 
 /**
- * If there have been successful actions persisted, then return them as an array
+ * The base folder for all nedb files for this quarter
  * @param year
  * @param quarter
  */
-
-
-function getName(name) {
-    var p = new Promise(function (resolve, rej) {
-        setTimeout(function () {
-            resolve(name)
-        }, 2000)
-
-    });
-    return p;
+function getLocalStateFolder(year, quarter) {
+    var appDatafolder = path.resolve(`${config.appDataLocation}/${year}_q${quarter}`)
+    return appDatafolder;
 }
+
+
+/**
+ * Remove all nedb files for this quarter
+ * @param year
+ * @param quarter
+ * @param cb
+ */
+function resetLocalState(year, quarter, cb) {
+    var appDatafolder = path.resolve(`${config.appDataLocation}/${year}_q${quarter}`)
+    //console.log(appDatafolder)
+    rimraf(appDatafolder, function (err) {
+        if (!err) {
+            cb()
+        }
+        else {
+            throw "Error deleting appData";
+        }
+    })
+}
+
+
+module.exports = {
+    fdicSdiQuarter_factory,
+    getLocalStateFolder,
+    getLocalState_AllVars,
+    resetLocalState
+};
