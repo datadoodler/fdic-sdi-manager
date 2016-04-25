@@ -7,7 +7,8 @@ var fdicSdiQuarter = require('./fdic-sdi-quarter.js');
 
 //getPersistedSuccessfulActions(2012, 1);
 function getPersistedSuccessfulActions(year, quarter) {
-    const dbfile = path.resolve(`${config.appDataLocation}/${year}_q${quarter}/sdiSuccessfulActions_${year}_q${quarter}.db`);
+    const dbfile = path.resolve(`${config.applicationStateLocation}/${year}_q${quarter}/sdiSuccessfulActions_${year}_q${quarter}.db`);
+    console.log('dbfile', `${path.basename(__filename)} - getPersistedSuccessfulActions -`,dbfile)
 
     let p = new Promise(function (resolve, reject) {
 
@@ -49,25 +50,6 @@ function persistSuccessfulActions(successfullActionsArray, year, quarter) {
     })
 }
 
-/**
- *
- * @returns {Datastore}
- * @param year
- * @param quarter
- */
-function getLocalState_CsvMetadata(year, quarter) {
-    //console.log(year,quarter)
-    var db = new Datastore({
-        filename: path.join(fdicSdiQuarter.getLocalStateFolder(year, quarter), '/localState_CsvFiles.db'),
-        autoload: false,
-        timestampData: true
-    });
-    //console.log(db)
-    db.loadDatabase(function (err) {
-        logger.error(err)
-    });
-    return db;
-}
 
 
 /**
@@ -76,18 +58,42 @@ function getLocalState_CsvMetadata(year, quarter) {
  * @param year
  * @param quarter
  */
-function getLocalState_CsvMetadata(year, quarter) {
+
+//getLocalState_CsvMetadata(2008,4)
+function getLocalState_CsvMetadata(year, quarter,cb) {
+    //console.log('what is cb?',cb)
     //console.log(fdicSdiQuarter)
+    var dbfile =  path.join(getLocalStateFolder(year, quarter), 'localState_CsvMetadata.db');
+   //var dbfile =  '/Users/kdm/DoodleZone/bankerdoodle/fdic-sdi-manager/application-state/2008_q1/localState_CsvMetadata2.db';
+    //console.log('dbfile',dbfile)
     var db = new Datastore({
-        filename: path.join(getLocalStateFolder(year, quarter), '/localState_CsvMetadata.db'),
-        autoload: false,
+        filename: dbfile,
+        autoload: true,
         timestampData: true
     });
+    console.log('db', `${path.basename(__filename)} - getLocalState_CsvMetadata - before loadDatabase`)
     //console.log(db)
-    db.loadDatabase(function (err) {
-        logger.error(err)
-    });
-    return db;
+    //db.loadDatabase(function (err) {
+    //    logger.error(err)
+    //});
+
+    console.log('db', `${path.basename(__filename)} - getLocalState_CsvMetadata - after loadDatabase`)
+    //console.log(db)
+ return db;
+
+    //db.update({ planet: 'Pluton' }, { planet: 'Pluton', inhabited: false }, { upsert: true }, function (err, numReplaced, upsert) {
+    //   console.log('err',err)
+    //   console.log('numReplaced',numReplaced)
+    //   console.log('upsert',upsert)
+    //    cb()
+    //    // numReplaced = 1, upsert = { _id: 'id5', planet: 'Pluton', inhabited: false }
+    //    // A new document { _id: 'id5', planet: 'Pluton', inhabited: false } has been added to the collection
+    //});
+    //cb()
+    //db.update(query, update, options,function (err, numReplaced, upsert) {
+    //    console.log("in upsert callback", upsert)
+    //});
+    //return db;
 }
 
 /**
@@ -96,7 +102,7 @@ function getLocalState_CsvMetadata(year, quarter) {
  * @param quarter
  */
 function getLocalStateFolder(year, quarter) {
-    var appDatafolder = path.resolve(`${config.appDataLocation}/${year}_q${quarter}`);
+    var appDatafolder = path.resolve(`${config.applicationStateLocation}/${year}_q${quarter}`);
     return appDatafolder;
 }
 

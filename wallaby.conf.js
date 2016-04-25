@@ -16,7 +16,7 @@ module.exports = function (wallaby) {
         ],
 
         tests: [
-            'test/2-fdic-sdi-quarter.spec.js',
+            'test/fdic-sdi-quarter/upsertCsvFile.spec.js',
 //            'test/**/*.spec.js',
             {pattern: 'test/4-file-handler.spec.jsx', ignore:true}
         ],

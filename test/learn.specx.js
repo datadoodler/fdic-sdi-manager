@@ -46,8 +46,8 @@ function *MyClassFactory(fname) {
 var myClass = co(MyClassFactory('johny'));
 console.log("just after instantiating co", myClass);
 myClass.then(function (result, x) {
-    console.log('in myClass.then', myClass, result)
-    console.log(result.fname, x);
+    ///console.log('in myClass.then', myClass, result)
+    //console.log(result.fname, x);
 })
 
 

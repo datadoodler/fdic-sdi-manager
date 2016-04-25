@@ -32,3 +32,7 @@ node_modules
 test-data/fdic_stage_2/*.*
 
 app-data
+test-data/fdic_stage_2
+test/zipfile-extract/destination/*.*
+test/zipfile-extract/source/*.*
+

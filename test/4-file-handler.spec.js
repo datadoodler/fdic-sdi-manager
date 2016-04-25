@@ -69,7 +69,7 @@ describe('extractZippedFiles method return array of filename', function () {
     it('should return an empty array if the filename does not resolve to a zip file', function () {
         this.timeout(15000);
         return FileHandler.extractZippedFiles("XX").then(function (result) {
-            console.log('result', result, result.length)
+            //console.log('result', result, result.length)
             expect(result.length).to.equal(0)
         })
     });
@@ -85,7 +85,7 @@ describe('extractZippedFiles method', function () {
     });
 
 
-    it('should copy all files in zip file to destination folder', function () {
+    it.skip('should copy all files in zip file to destination folder', function () {
         this.timeout(20000);
         return FileHandler.extractZippedFiles(fileThatExists, config.stage2Location).then(function (result) {
             expect(result.length).to.equal(62);

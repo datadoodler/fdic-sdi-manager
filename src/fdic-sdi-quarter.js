@@ -3,7 +3,6 @@ var path = require('path');
 var fs = require('fs');
 var config = require('config');
 var database = require('./database');
-var rimraf = require('rimraf');
 var logger = require('./logger');
 var FileHandler = require('./file-handler.js');
 var QDate = require('./q-date');
@@ -40,12 +39,12 @@ function* fdicSdiQuarter_factory(options) {
         fdicSdiQuarter._stage1FileExists = yield FileHandler.fileExists(fdicSdiQuarter.stage1Filename);
         fdicSdiQuarter._successfulActions = yield database.getPersistedSuccessfulActions(options.year, options.quarter);
 
-        fdicSdiQuarter._csvFileMetadata = yield getCsvFileMetadata(options.year, options.quarter);
-        console.log(fdicSdiQuarter._csvFileMetadata);
-        console.log(fdicSdiQuarter.stage1Filename)
-        console.log(fdicSdiQuarter.stage1FileExists)
-        if(fdicSdiQuarter._csvFileMetadata.length===0 && fdicSdiQuarter.stage1FileExists){
-            extractZip(fdicSdiQuarter.stage1Filename,getCsvFolder(options.year,options.quarter))
+        fdicSdiQuarter._csvFileMetadata = yield getPersistedCsvFileMetadata(options.year, options.quarter);
+        //console.log(fdicSdiQuarter._csvFileMetadata);
+        //console.log('fdicSdiQuarter.stage1Filename', fdicSdiQuarter.stage1Filename)
+        //console.log(fdicSdiQuarter.stage1FileExists)
+        if (fdicSdiQuarter._csvFileMetadata.length === 0 && fdicSdiQuarter.stage1FileExists) {
+            fdicSdiQuarter._csvFileMetadata = yield extractZipAndPersistMetadata(fdicSdiQuarter.stage1Filename, getCsvFolder(options.year, options.quarter))
         }
         return fdicSdiQuarter;
     }
@@ -75,10 +74,10 @@ class FdicSdiQuarter {
          */
         this._successfulActions = [];
 
-        this._stage1FileExists = true;
+        this._stage1FileExists;
 
         //assume it is expanded to avoid performance hit of reading zip by default
-        this._zipFileExpanded = true;
+        this._zipFileExpanded;
 
 
         //an array of filenames in the fdic quarter zip file
@@ -147,70 +146,90 @@ function resolveOptions(options) {
 }
 
 
-function extractZip(filename,destinationFolder) {
-    //This is inherently an async operation
-    //console.log(filename)
-    FileHandler.extractZippedFiles(filename,destinationFolder)
-        .then(function (one, result) {
-            console.log('result', one, result);
-        });
-}
+function extractZipAndPersistMetadata(filename, destinationFolder, year, quarter) {
+    console.log('filename', filename, destinationFolder)
+    destinationFolder = destinationFolder || getCsvFolder(year, quarter);
+    let p = new Promise(function (resolve, reject) {
+        var extractPromise = FileHandler.extractZippedFiles(filename, destinationFolder);
 
-function persistCsvFilenames() {
-    var p = FileHandler.getCompressedFileNames(this.stage1Filename)
-        .then(function (result) {
-            for (let i = 0; i < result.length; i++) {
-                let record = {filename: result[i]};
-                //console.log(record);
-                this.upsertCsvFile(result[i]);
-                //this.csvFiles.insert(record, function (err,newDoc) {
-                //    console.log(err,newDoc)
-                //});
+
+        extractPromise.then(function (result, err) {
+            if (err) {
+                console.log(err)
+                throw err
             }
-        }.bind(this));
-    //this.db_csvFiles.insert({test: "abc"})
+            console.log(result)
+
+            upsertCsvFile(result, year, quarter, function () {
+                resolve()
+            })
+        });
+    });
+    return p;
 }
 
-function upsertCsvFile(filename) {
-    let query = {
-        filename: filename
-    };
-    let update = {
-        filename: filename
-    };
-    let options = {
-        upsert: true
-    };
-    let callback = function (err, numAffected, affectedDocuments, upsert) {
-        console.log('err', err, 'numAffected', numAffected, 'affectedDocuments', affectedDocuments, 'upsert', upsert)
-    };
+function persistCsvFileMetadata(metadataRecords, year, quarter) {
+//console.log(metadata)
+    for (let i = 0; i < metadataRecords.length; i++) {
+        upsertCsvFile(metadataRecords[i], year, quarter);
+    }
+}
 
-    this.csvFiles.update(query, update, options, callback);
+//If a record already exists for the file, update it
+//If a record doesn't exist for the file, insert it
+function upsertCsvFile(records, year, quarter, cb) {
+    //console.log('upsertCsvFile args', records, year, quarter)
+    var db = database.getLocalState_CsvMetadata(year, quarter);
+    var promises = [];
+
+    for (let i = 0; i < records.length; i++) {
+        var p = new Promise(function (resolve, reject) {
+            let record = records[i]
+            let query = {
+                filename: record.filename
+            };
+            let update = {
+                record: record
+            };
+            let options = {
+                upsert: true
+            };
+            db.update(query, update, options, function (a, b, c) {
+                resolve();
+            })
+        });
+        promises.push(p);
+    }
+    console.log(promises)
+
+    Promise.all(promises).then(function (value) {
+        cb();
+    })
+
 }
 
 
 //EXPECT A PERFORMANCE HIT FOR EXTRACTING THE ZIP FILE THE FIRST TIME FUNCTION RUNS
-function getCsvFileMetadata(year, quarter) {
+function getPersistedCsvFileMetadata(year, quarter) {
+
     let p = new Promise(function (resolve, reject) {
 
+        console.log('inside promise', `${path.basename(__filename)} - getCsvFileMetadata - before getting ref to db`)
         //FIRST, SEARCH FOR PERSISTED METADATA IN DATABASE
-        var db = database.getLocalState_CsvMetadata(year, quarter)
-        //console.log(db);
+        var db = database.getLocalState_CsvMetadata(year, quarter);
+        console.log('inside promise', `${path.basename(__filename)} - getCsvFileMetadata - after getting ref to db`, db)
 
         db.find({}, function (err, docs) {
             //METADATA FOUND IN DATABASE
-            if (docs && docs.length > 0) {
-                //console.log(docs.length)
-                resolve(docs)
-            }
-            //METADATA NOT FOUND IN DATABASE, EXTRACT CSV FILE
-            if (docs && docs.length === 0) {
-                //console.log(docs.length)
+            if (docs) {
+                console.log('db.find({}..docs>0', `${path.basename(__filename)} - getCsvFileMetadata - `)
+                console.log('docs.length', docs.length)
+
                 resolve(docs)
             }
             if (err) {
-                throw err
-                resolve(false)
+                console.log('db.find({}err', `${path.basename(__filename)} - getCsvFileMetadata - `)
+                throw err;
             }
         });
 
@@ -257,22 +276,28 @@ function getCsvFolder(year, quarter) {
  * @param cb
  */
 function resetLocalState(year, quarter, cb) {
-    var appDatafolder = path.resolve(`${config.appDataLocation}/${year}_q${quarter}`)
+    var appDatafolder = path.resolve(`${config.applicationStateLocation}/${year}_q${quarter}`)
     //console.log(appDatafolder)
-    rimraf(appDatafolder, function (err) {
-        if (!err) {
-            cb()
-        }
-        else {
-            throw "Error deleting appData";
-        }
+    FileHandler.deleteFolder(appDatafolder, function (res) {
+        cb()
     })
 }
 
+function resetCsvFiles(year, quarter, cb) {
+    var appDatafolder = getCsvFolder(year, quarter)
+    //console.log(appDatafolder)
+    FileHandler.deleteFolder(appDatafolder, function (res) {
+        cb()
+    })
+}
 
 module.exports = {
     fdicSdiQuarter_factory,
     getLocalState_AllVars,
     getCsvFolder,
-    resetLocalState
+    resetLocalState,
+    resetCsvFiles,
+    getPersistedCsvFileMetadata,
+    extractZipAndPersistMetadata,
+    upsertCsvFile
 };

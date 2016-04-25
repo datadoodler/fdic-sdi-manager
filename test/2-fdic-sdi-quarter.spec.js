@@ -4,7 +4,6 @@ var fs = require('fs');
 var chai = require('chai');
 var expect = chai.expect;
 
-
 var config = require('config');
 var co = require('co')
 
@@ -12,6 +11,8 @@ var FdicSdiQuarterModule = require('../src/fdic-sdi-quarter');
 var QDate = require('../src/q-date.js');
 var database = require('../src/database.js');
 
+
+/*
 describe.skip('fdic-sdi-quarter - With Valid QDate - GETTERS AND SETTERS', function () {
     this.timeout(15000);
     var myFdicSdiQuarter;
@@ -23,7 +24,7 @@ describe.skip('fdic-sdi-quarter - With Valid QDate - GETTERS AND SETTERS', funct
         //console.log("This is fdic quarter in 2 ",fdicSdiQuarter);
         fdicSdiQuarter.then(function (result) {
             myFdicSdiQuarter = result;
-            console.log(result);
+            //console.log(result);
             done()
         })
     });
@@ -106,10 +107,9 @@ describe.skip('fdic-sdi-quarter - With Valid QDate - GETTERS AND SETTERS', funct
         })
     })
 })
-
-
-describe('fdic-sdi-quarter - ZIP FILE HAS NOT BEEN EXPANDED', function () {
-    this.timeout(15000);
+*/
+describe.only('fdic-sdi-quarter - ZIP FILE HAS NOT BEEN EXPANDED', function () {
+    this.timeout(5000);
     var myFdicSdiQuarter;
     var options = {year: 2008, quarter: 4};
 
@@ -119,10 +119,15 @@ describe('fdic-sdi-quarter - ZIP FILE HAS NOT BEEN EXPANDED', function () {
             done();
         })
     })
+    before(function (done) {
+        FdicSdiQuarterModule.resetCsvFiles(options.year, options.quarter, function (result) {
+            done();
+        })
+    })
     describe('If the zip file has not been unzipped it should be unzipped on instatiation', function () {
         it('app data should not exist at this point', function (done) {
-            var appDatafolder = database.getLocalStateFolder(options.year, options.quarter);
-            fs.stat(appDatafolder, function (err, stats) {
+            var localStateFolder = database.getLocalStateFolder(options.year, options.quarter);
+            fs.stat(localStateFolder, function (err, stats) {
                 expect(err && err.errno === -2).to.be.true;
                 done();
             });
@@ -154,19 +159,23 @@ describe('fdic-sdi-quarter - ZIP FILE HAS NOT BEEN EXPANDED', function () {
 
             it('csv files should now exist', function (done) {
                 var csvFolder = FdicSdiQuarterModule.getCsvFolder(options.year, options.quarter)
+                //console.log(csvFolder)
                 fs.stat(csvFolder, function (err, stats) {
-                    expect(err && err.errno === -2).to.be.false;
+                    //console.log(stats)
+                    expect(err).to.not.exist
+                    //expect(err && err.errno === -2).to.be.false;
                     done();
                 });
             });
         })
     })
 })
-describe.skip('initial state', function () {
+
+/*describe.skip('initial state', function () {
 
 
     it('starts with no data in appData', function (done) {
-        var appDatafolder = path.resolve(`${config.appDataLocation}/${options.year}_q${options.quarter}`)
+        var appDatafolder = path.resolve(`${config.applicationStateLocation}/${options.year}_q${options.quarter}`)
         fs.stat(appDatafolder, function (err, stats) {
             //Check if error defined and the error code is "not exists"
             //console.log(err)
@@ -189,5 +198,5 @@ describe.skip('initial state', function () {
     });
     it('should expand zip file on initialization')
 })
-
+*/
 

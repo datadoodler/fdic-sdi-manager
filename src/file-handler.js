@@ -2,12 +2,11 @@
 var fs = require('fs');
 var path = require('path');
 var config = require('config')
-
+var logger = require('./logger');
 var yauzl = require("yauzl");
-
+var rimraf = require('rimraf');
 
 function fileExists(path, cb) {
-    console.log(path)
     var p = new Promise(function (resolve, reject) {
         fs.stat(path, function (err, stats) {
             if (err) {
@@ -30,23 +29,42 @@ function fileExists(path, cb) {
 }
 
 
-function extractZippedFiles(pathToFile, destinationFolder) {
-    console.log(pathToFile)
-    console.log(destinationFolder)
-    var destinationFolder=path.resolve(destinationFolder)
-    var p = new Promise(function (resolve, reject) {
-        function handleErr() {
-            resolve([])
+function deleteFolder(foldername, cb) {
+    rimraf(foldername, function (err) {
+        if (!err) {
+            cb()
         }
+        else {
+            throw "Error deleting appData";
+        }
+    })
+}
 
-        fileExists(pathToFile, function (rsl) {
-                if (!rsl) {
-                    resolve([])
+function makeFolder(path) {
+    try {
+        fs.mkdirSync(path);
+    }
+    catch (e) {
+        logger.silly(e)
+    }
+}
+
+function extractZippedFiles(pathToFile, destfolder) {
+    console.log('destfolder',destfolder)
+    makeFolder(destfolder);
+    console.log('pathToFile',pathToFile)
+    var destinationFolder = path.resolve(destfolder)
+    console.log('destfolder',destfolder)
+    var p = new Promise(function (resolve, reject) {
+
+        fileExists(pathToFile, function (result) {
+                if (!result) {
+                    throw `in fileExists() metho - FILE ${pathToFile} DOES NOT EXIST`;
                 }
                 else {
 
                     var mycounter = 0;
-                    var ret = [];
+                    var csvFileMetadata = [];
                     try {
                         yauzl.open(pathToFile, {lazyEntries: true}, function (err, zipfile) {
                             if (err) handleErr();//throw err;
@@ -55,18 +73,28 @@ function extractZippedFiles(pathToFile, destinationFolder) {
                                 mycounter++;
                                 // file entry
                                 zipfile.openReadStream(entry, function (err, readStream) {
-                                    if (err) handleErr();//throw err;
-                                    ret.push(entry.fileName);
-                                    //console.log(mycounter)
+                                    if (err) {
+                                        logger.error(err);
+                                        throw err;
+                                    }
+                                    //console.log('entry',entry.lastModFileDate)
+                                    csvFileMetadata.push({
+                                        filename:entry.fileName,
+                                        lastModifiedTime:entry.lastModFileTime,
+                                        lastModFileDate:entry.lastModFileDate
+                                    });
+                                    //console.log(csvFileMetadata)
                                     //console.log('entryx', entry);
-                                    readStream.pipe(fs.createWriteStream(destinationFolder + entry.fileName));
+                                    readStream.pipe(fs.createWriteStream(destinationFolder + '/' + entry.fileName));
                                     readStream.on("end", function () {
                                         zipfile.readEntry();
                                     });
                                 });
                             });
-                            zipfile.on('end', function (err) {
-                                resolve(ret)
+                            zipfile.on('end', function (err,r1) {
+                                console.log('err,r1',err,r1)
+                                console.log('csvFileMetadata.length',csvFileMetadata.length)
+                                resolve(csvFileMetadata)
                             })
                         });
                     }
@@ -103,28 +131,11 @@ function getCompressedFileNames(zipFile) {
     return p;
 }
 
-function getMyFils() {
-    var prm = new Promise(function (resolve, reject) {
 
-        var ret = [];
-
-        var strm = fs.createReadStream(path);
-        strm.pipe(unzip.Parse())
-            .on('entry', function (entry) {
-                process.stdout.write('x');
-                ret.push(entry.path);
-                entry.autodrain();
-            });
-        strm.on('end', function () {
-            console.log('\n');
-            resolve(ret);
-        });
-    });
-    return prm;
-}
 
 module.exports = {
     fileExists,
     getCompressedFileNames,
-    extractZippedFiles
+    extractZippedFiles,
+    deleteFolder
 };
