@@ -12,7 +12,7 @@ var destinationFolder = path.join(__dirname,"destination")
 //console.log('destinationFolder',destinationFolder);
 describe('test file extraction',function(){
     before('delete any existing files in destination',function(done){
-        console.log('before')
+        //console.log('before')
         FileHandler.deleteFolder(destinationFolder,function(){
             done()
         })
@@ -32,6 +32,6 @@ describe('test file extraction',function(){
     });
 
     it('now run getCsvFileMetadata and look for error messages',function(){
-        getCsvFileMetadata
+        //getCsvFileMetadata
     })
 })

@@ -50,11 +50,11 @@ function makeFolder(path) {
 }
 
 function extractZippedFiles(pathToFile, destfolder) {
-    console.log('destfolder',destfolder)
+    //console.log('destfolder',destfolder)
     makeFolder(destfolder);
-    console.log('pathToFile',pathToFile)
+    //console.log('pathToFile',pathToFile)
     var destinationFolder = path.resolve(destfolder)
-    console.log('destfolder',destfolder)
+    //console.log('destfolder',destfolder)
     var p = new Promise(function (resolve, reject) {
 
         fileExists(pathToFile, function (result) {
@@ -92,8 +92,8 @@ function extractZippedFiles(pathToFile, destfolder) {
                                 });
                             });
                             zipfile.on('end', function (err,r1) {
-                                console.log('err,r1',err,r1)
-                                console.log('csvFileMetadata.length',csvFileMetadata.length)
+                                //console.log('err,r1',err,r1)
+                                //console.log('csvFileMetadata.length',csvFileMetadata.length)
                                 resolve(csvFileMetadata)
                             })
                         });

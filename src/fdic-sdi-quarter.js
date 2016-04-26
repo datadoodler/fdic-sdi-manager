@@ -32,7 +32,7 @@ function* fdicSdiQuarter_factory(options) {
 
     try {
         options = resolveOptions(options);
-
+console.log(options)
         var fdicSdiQuarter = new FdicSdiQuarter(options.year, options.quarter);
 
         // GET INITIAL STATE - FILL ASYNC PROPERTIES FOR THIS INSTANCE
@@ -40,11 +40,9 @@ function* fdicSdiQuarter_factory(options) {
         fdicSdiQuarter._successfulActions = yield database.getPersistedSuccessfulActions(options.year, options.quarter);
 
         fdicSdiQuarter._csvFileMetadata = yield getPersistedCsvFileMetadata(options.year, options.quarter);
-        //console.log(fdicSdiQuarter._csvFileMetadata);
-        //console.log('fdicSdiQuarter.stage1Filename', fdicSdiQuarter.stage1Filename)
-        //console.log(fdicSdiQuarter.stage1FileExists)
+        console.log(fdicSdiQuarter.stage1FileExists)
         if (fdicSdiQuarter._csvFileMetadata.length === 0 && fdicSdiQuarter.stage1FileExists) {
-            fdicSdiQuarter._csvFileMetadata = yield extractZipAndPersistMetadata(fdicSdiQuarter.stage1Filename, getCsvFolder(options.year, options.quarter))
+            fdicSdiQuarter._csvFileMetadata = yield extractZipAndPersistMetadata(fdicSdiQuarter.stage1Filename, getCsvFolder(options.year, options.quarter), options.year, options.quarter)
         }
         return fdicSdiQuarter;
     }
@@ -158,7 +156,7 @@ function extractZipAndPersistMetadata(filename, destinationFolder, year, quarter
                 console.log(err)
                 throw err
             }
-            console.log(result)
+            //console.log(result)
 
             upsertCsvFile(result, year, quarter, function () {
                 resolve()
@@ -200,7 +198,7 @@ function upsertCsvFile(records, year, quarter, cb) {
         });
         promises.push(p);
     }
-    console.log(promises)
+    //console.log(promises)
 
     Promise.all(promises).then(function (value) {
         cb();
@@ -214,21 +212,21 @@ function getPersistedCsvFileMetadata(year, quarter) {
 
     let p = new Promise(function (resolve, reject) {
 
-        console.log('inside promise', `${path.basename(__filename)} - getCsvFileMetadata - before getting ref to db`)
+        //console.log('inside promise', `${path.basename(__filename)} - getCsvFileMetadata - before getting ref to db`)
         //FIRST, SEARCH FOR PERSISTED METADATA IN DATABASE
         var db = database.getLocalState_CsvMetadata(year, quarter);
-        console.log('inside promise', `${path.basename(__filename)} - getCsvFileMetadata - after getting ref to db`, db)
+        //console.log('inside promise', `${path.basename(__filename)} - getCsvFileMetadata - after getting ref to db`, db)
 
         db.find({}, function (err, docs) {
             //METADATA FOUND IN DATABASE
             if (docs) {
-                console.log('db.find({}..docs>0', `${path.basename(__filename)} - getCsvFileMetadata - `)
-                console.log('docs.length', docs.length)
+                //console.log('db.find({}..docs>0', `${path.basename(__filename)} - getCsvFileMetadata - `)
+                //console.log('docs.length', docs.length)
 
                 resolve(docs)
             }
             if (err) {
-                console.log('db.find({}err', `${path.basename(__filename)} - getCsvFileMetadata - `)
+                //console.log('db.find({}err', `${path.basename(__filename)} - getCsvFileMetadata - `)
                 throw err;
             }
         });
@@ -247,7 +245,7 @@ function getPersistedCsvFileMetadata(year, quarter) {
  */
 function getLocalState_AllVars(year, quarter) {
     var db = new Datastore({
-        filename: path.join(getLocalStateFolder(year, quarter), '/localState_AllVars.db'),
+        filename: path.join(getLocalStateFolder(year, quarter), '/allVars.db'),
         autoload: false,
         timestampData: true
     })

@@ -35,7 +35,7 @@ function *MyClassFactory(fname) {
 
         var myClass = new MyClass(fname);
         myClass.fname = yield getName('kent');
-        console.log('in factory, myClass', myClass);
+        //console.log('in factory, myClass', myClass);
         return myClass;
     }
     catch (e) {
@@ -44,14 +44,14 @@ function *MyClassFactory(fname) {
 }
 
 var myClass = co(MyClassFactory('johny'));
-console.log("just after instantiating co", myClass);
+//console.log("just after instantiating co", myClass);
 myClass.then(function (result, x) {
     ///console.log('in myClass.then', myClass, result)
     //console.log(result.fname, x);
 })
 
 
-console.log(`so I'm walking along with my new class ${myClass.fname}`);
+//console.log(`so I'm walking along with my new class ${myClass.fname}`);
 
 //co(initMyClass(myClass));
 
@@ -66,7 +66,7 @@ function *initMyClass(myClass) {
         //var two = yield 2;
         //var three = yield 3;
         //var res = yield [fname, lname];
-        console.log(myClass, lname)
+        //console.log(myClass, lname)
     }
     catch (e) {
         console.log('ERROR', e)
@@ -75,18 +75,18 @@ function *initMyClass(myClass) {
 
 
 function getNameNoPromise(namex) {
-    console.log('in getNameNoPromise', namex)
+    //console.log('in getNameNoPromise', namex)
     return {namex};
 }
 function getName(name) {
-    console.log('in getName', name)
+    //console.log('in getName', name)
     var x = [1,2];
-    console.log('wheres the error?',x[3].name)
+    //console.log('wheres the error?',x[3].name)
     var p = new Promise(function (resolve, rej) {
         setTimeout(function () {
-            console.log('leaving getName1', name)
+            //console.log('leaving getName1', name)
             resolve(name)
-            console.log('leaving getName2', name)
+            //console.log('leaving getName2', name)
         }, 2000)
 
     });
@@ -95,12 +95,12 @@ function getName(name) {
 
 
 function getLName(fname, name) {
-    console.log('in getLName', name)
+    //console.log('in getLName', name)
     var p = new Promise(function (resolve, rej) {
         setTimeout(function () {
-            console.log('leaving getLName1', name)
+            //console.log('leaving getLName1', name)
             resolve(fname + name)
-            console.log('leaving getLName2', name)
+            //console.log('leaving getLName2', name)
         }, 500)
     });
     return p;

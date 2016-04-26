@@ -12,16 +12,16 @@ var QDate = require('../src/q-date.js');
 var database = require('../src/database.js');
 
 
-/*
-describe.skip('fdic-sdi-quarter - With Valid QDate - GETTERS AND SETTERS', function () {
+
+describe('fdic-sdi-quarter - With Valid QDate - GETTERS AND SETTERS', function () {
     this.timeout(15000);
     var myFdicSdiQuarter;
     before(function (done) {
 
-        var options = {year: 2015, quarter: 1};
+        var options = {year: 2008, quarter: 4};
 
         var fdicSdiQuarter = co(FdicSdiQuarterModule.fdicSdiQuarter_factory(options));
-        //console.log("This is fdic quarter in 2 ",fdicSdiQuarter);
+        console.log("This is fdic quarter in 2 ", fdicSdiQuarter);
         fdicSdiQuarter.then(function (result) {
             myFdicSdiQuarter = result;
             //console.log(result);
@@ -47,7 +47,8 @@ describe.skip('fdic-sdi-quarter - With Valid QDate - GETTERS AND SETTERS', funct
         //console.log(myFdicSdiQuarter._successfulActions)
         //console.log(myFdicSdiQuarter.getSuccessfullAction('test'))
     });
-
+})
+/*
     describe.skip('basic instance properties', function () {
 
         it('qDate property of type QDate', function () {
@@ -106,9 +107,9 @@ describe.skip('fdic-sdi-quarter - With Valid QDate - GETTERS AND SETTERS', funct
             qtr.persistCsvFilenames();
         })
     })
-})
-*/
-describe.only('fdic-sdi-quarter - ZIP FILE HAS NOT BEEN EXPANDED', function () {
+})*/
+
+/*describe('fdic-sdi-quarter - ZIP FILE HAS NOT BEEN EXPANDED', function () {
     this.timeout(5000);
     var myFdicSdiQuarter;
     var options = {year: 2008, quarter: 4};
@@ -126,8 +127,8 @@ describe.only('fdic-sdi-quarter - ZIP FILE HAS NOT BEEN EXPANDED', function () {
     })
     describe('If the zip file has not been unzipped it should be unzipped on instatiation', function () {
         it('app data should not exist at this point', function (done) {
-            var localStateFolder = database.getLocalStateFolder(options.year, options.quarter);
-            fs.stat(localStateFolder, function (err, stats) {
+            var appStateFolder = database.getLocalStateFolder(options.year, options.quarter);
+            fs.stat(appStateFolder, function (err, stats) {
                 expect(err && err.errno === -2).to.be.true;
                 done();
             });
@@ -170,7 +171,7 @@ describe.only('fdic-sdi-quarter - ZIP FILE HAS NOT BEEN EXPANDED', function () {
         })
     })
 })
-
+*/
 /*describe.skip('initial state', function () {
 
 

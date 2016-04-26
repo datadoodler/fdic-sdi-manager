@@ -22,8 +22,8 @@ describe('getCsvFileMetadata',function(){
         var rtrn = FdicSdiQuarterModule.getPersistedCsvFileMetadata(2008,4)
         expect(rtrn).to.exist
         rtrn.then(function(res,rej){
-            console.log('res',`${path.basename(__filename)} - getCsvFileMetadata - ${res}`,res)
-            console.log('rej', `${path.basename(__filename)} - getCsvFileMetadata - ${rej}`,rej)
+            //console.log('res',`${path.basename(__filename)} - getCsvFileMetadata - ${res}`,res)
+            //console.log('rej', `${path.basename(__filename)} - getCsvFileMetadata - ${rej}`,rej)
             done()
         });
        // console.log('rtrn',`${path.basename(__filename)} - getCsvFileMetadata - rtrn ${rtrn}`,rtrn)

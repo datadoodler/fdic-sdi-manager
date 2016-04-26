@@ -15,16 +15,16 @@ try {
     fdicSdiQuarter = co(FdicSdiQuarter_factory(null, 2012, 4));
 
 //fdicSdiQuarter.extractZip();
-    console.log('fdicSdiQuarter', fdicSdiQuarter);
+    //console.log('fdicSdiQuarter', fdicSdiQuarter);
 //console.log('typeof fdicSdiQuarter',typeof fdicSdiQuarter.then);
 //console.log('instance of?',fdicSdiQuarter instanceof Promise)
     fdicSdiQuarter.then(function (fdicSdiQuarter) {
-        console.log('fdicSdiQuarter', fdicSdiQuarter.fname);
+        //console.log('fdicSdiQuarter', fdicSdiQuarter.fname);
     });
 
 }
 catch (e) {
-    console.log(`holy cow batman we have an error!`, e)
+    //console.log(`holy cow batman we have an error!`, e)
 }
 
-console.log('fdicSdiQuarter', fdicSdiQuarter);
+//console.log('fdicSdiQuarter', fdicSdiQuarter);
