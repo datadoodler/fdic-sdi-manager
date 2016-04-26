@@ -43,13 +43,12 @@ function getLocalState_SuccessfulActions(year, quarter) {
 
 
 function persistSuccessfulActions(successfullActionsArray, year, quarter) {
-    var db = getLocalState_SuccessfulActions(year,quarter)
+    var db = getLocalState_SuccessfulActions(year, quarter)
 
 
     db.insert(successfullActionsArray, function (err, newDocs) {
     })
 }
-
 
 
 /**
@@ -60,42 +59,36 @@ function persistSuccessfulActions(successfullActionsArray, year, quarter) {
  */
 
 //getLocalState_CsvMetadata(2008,4)
-function getLocalState_CsvMetadata(year, quarter,cb) {
-    //console.log('what is cb?',cb)
-    //console.log(fdicSdiQuarter)
-    var dbfile =  path.join(getLocalStateFolder(year, quarter), 'csvMetadata.db');
-   //var dbfile =  '/Users/kdm/DoodleZone/bankerdoodle/fdic-sdi-manager/application-state/2008_q1/localState_CsvMetadata2.db';
+function getLocalState_CsvMetadata(year, quarter) {
+    var dbfile = path.join(getLocalStateFolder(year, quarter), 'csvMetadata.db');
+    //var dbfile =  '/Users/kdm/DoodleZone/bankerdoodle/fdic-sdi-manager/application-state/2008_q1/localState_CsvMetadata2.db';
     //console.log('dbfile',dbfile)
     var db = new Datastore({
         filename: dbfile,
         autoload: true,
         timestampData: true
     });
-    //console.log('db', `${path.basename(__filename)} - getLocalState_CsvMetadata - before loadDatabase`)
-    //console.log(db)
-    //db.loadDatabase(function (err) {
-    //    logger.error(err)
-    //});
-
-    //console.log('db', `${path.basename(__filename)} - getLocalState_CsvMetadata - after loadDatabase`)
-    //console.log(db)
- return db;
-
-    //db.update({ planet: 'Pluton' }, { planet: 'Pluton', inhabited: false }, { upsert: true }, function (err, numReplaced, upsert) {
-    //   console.log('err',err)
-    //   console.log('numReplaced',numReplaced)
-    //   console.log('upsert',upsert)
-    //    cb()
-    //    // numReplaced = 1, upsert = { _id: 'id5', planet: 'Pluton', inhabited: false }
-    //    // A new document { _id: 'id5', planet: 'Pluton', inhabited: false } has been added to the collection
-    //});
-    //cb()
-    //db.update(query, update, options,function (err, numReplaced, upsert) {
-    //    console.log("in upsert callback", upsert)
-    //});
-    //return db;
+    return db;
 }
 
+function getColumnArrayDb(csvFilePath) {
+    var dbfile =  `${path.dirname(csvFilePath)}/${path.basename(csvFilePath, '.db')}_ColumnArray.db`;
+    var db = new Datastore({
+        filename: dbfile,
+        autoload: true,
+        timestampData: true
+    });
+    return db;
+}
+function getOriginalShapeDb(csvFilePath) {
+    var dbfile =  `${path.dirname(csvFilePath)}/${path.basename(csvFilePath, '.db')}_OriginalShape.db`;
+    var db = new Datastore({
+        filename: dbfile,
+        autoload: true,
+        timestampData: true
+    });
+    return db;
+}
 /**
  * The base folder for all nedb files for this quarter
  * @param year
@@ -110,5 +103,7 @@ module.exports = {
     getPersistedSuccessfulActions,
     persistSuccessfulActions,
     getLocalState_CsvMetadata,
-    getLocalStateFolder
+    getLocalStateFolder,
+    getOriginalShapeDb,
+    getColumnArrayDb
 };

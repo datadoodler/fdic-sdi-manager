@@ -32,7 +32,7 @@ function* fdicSdiQuarter_factory(options) {
 
     try {
         options = resolveOptions(options);
-console.log(options)
+        console.log(options)
         var fdicSdiQuarter = new FdicSdiQuarter(options.year, options.quarter);
 
         // GET INITIAL STATE - FILL ASYNC PROPERTIES FOR THIS INSTANCE
@@ -143,6 +143,57 @@ function resolveOptions(options) {
     }
 }
 
+function convertCsvToDatabase(csvFile, cb) {
+    var Converter = require("csvtojson").Converter;
+    //var columArrData=__dirname+"/data/columnArray";
+    var rs = fs.createReadStream(csvFile);
+    var dbColumnArray=database.getColumnArrayDb(csvFilePath)
+    var dbOriginalShape=database.getOriginalShapeDb(csvFilePath)
+    var result = {}
+    var myMap = new Map();
+    var csvConverter = new Converter();
+
+    csvConverter.on("end_parsed", function (jsonObj) {
+        console.log('xxxxxxxxx-jsonObj', jsonObj);
+        console.log("Finished parsing");
+        myMap.forEach(function (val, key) {
+// write to ...ColumnArray.db
+// write to ...RecordCentric.db
+            console.log('foreach...', key, val)
+        })
+        cb();
+    });
+
+//record_parsed will be emitted each time a row has been parsed.
+    csvConverter.on("record_parsed", function (resultRow, rawRow, rowIndex) {
+
+        if (rowIndex < 2) {
+            //console.log('resultRow', rowIndex, resultRow)
+            //console.log('rawRow', rowIndex, rawRow)
+            for (var key in resultRow) {
+                if (!result[key] || !result[key] instanceof Array) {
+                    result[key] = [];
+                }
+                result[key][rowIndex] = resultRow[key];
+                //myMap.set(key,resultRow[key])
+
+                if (!myMap.get(key)) {
+                    myMap.set(key, [])
+                }
+                let thisarray = myMap.get(key);
+                thisarray.push(resultRow[key]);
+                myMap.set(key, thisarray);
+
+                //console.log('rowIndex, result[key][rowIndex] ',rowIndex,result[key][rowIndex] );
+                //console.log('rowIndex, key, result[key] ',rowIndex,key,result[key])
+                //result[key].pipe(ws)
+            }
+        }
+    });
+
+    rs.pipe(csvConverter);//.pipe(ws)
+}
+
 
 function extractZipAndPersistMetadata(filename, destinationFolder, year, quarter) {
     console.log('filename', filename, destinationFolder)
@@ -180,7 +231,7 @@ function upsertCsvFile(records, year, quarter, cb) {
     var db = database.getLocalState_CsvMetadata(year, quarter);
     var promises = [];
 
-    for (let i = 0; i < records.length; i++) {
+    for (let i = 0; i < records.length; i++)
         var p = new Promise(function (resolve, reject) {
             let record = records[i]
             let query = {

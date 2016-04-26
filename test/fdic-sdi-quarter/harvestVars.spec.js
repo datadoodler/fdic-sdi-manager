@@ -11,9 +11,9 @@ var FdicSdiQuarterModule = require('../../src/fdic-sdi-quarter');
 var QDate = require('../../src/q-date.js');
 var database = require('../../src/database.js');
 
-function convertCsvToColumnArray(csvFile, jsArrayFile, cb) {
+function convertCsvToDatabase(csvFile,  cb) {
     var Converter = require("csvtojson").Converter;
-    //var columArrData=__dirname+"/data/columnArray";
+    var dbColumnArray=get
     var rs = fs.createReadStream(csvFile);
     var ws = fs.createWriteStream(jsArrayFile);
     var result = {}
@@ -25,7 +25,8 @@ function convertCsvToColumnArray(csvFile, jsArrayFile, cb) {
         console.log("Finished parsing");
         myMap.forEach(function(val,key){
 // write to ...ColumnArray.db
-// write to ...RecordCentric.db
+
+// write to ...OriginalShape.db
             console.log('foreach...',key,val)
         })
         cb();
