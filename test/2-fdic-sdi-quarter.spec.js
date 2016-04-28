@@ -14,7 +14,7 @@ var database = require('../src/database.js');
 
 
 describe('fdic-sdi-quarter - With Valid QDate - GETTERS AND SETTERS', function () {
-    this.timeout(25000);
+    this.timeout(205000);
     var myFdicSdiQuarter;
     before(function (done) {
 
@@ -41,9 +41,9 @@ describe('fdic-sdi-quarter - With Valid QDate - GETTERS AND SETTERS', function (
         //console.log(props.findIndex(x => x === "yyyy"))
         const descriptor = Object.getOwnPropertyDescriptor(myFdicSdiQuarter, '_qDate');
         //console.log(descriptor)
-        expect(myFdicSdiQuarter).to.be.an.instanceof(Object);
-        myFdicSdiQuarter.setSuccessfulAction('test')
-        myFdicSdiQuarter.setSuccessfulAction('test')
+        //expect(myFdicSdiQuarter).to.be.an.instanceof(Object);
+        //myFdicSdiQuarter.setSuccessfulAction('test')
+        //myFdicSdiQuarter.setSuccessfulAction('test')
         //console.log(myFdicSdiQuarter._successfulActions)
         //console.log(myFdicSdiQuarter.getSuccessfullAction('test'))
     });

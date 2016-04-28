@@ -6,6 +6,7 @@ var database = require('./database');
 var logger = require('./logger');
 var FileHandler = require('./file-handler.js');
 var QDate = require('./q-date');
+let Converter = require("csvtojson").Converter;
 
 /**
  * Things that need to happen
@@ -39,7 +40,7 @@ function* fdicSdiQuarter_factory(options) {
 
 
         fdicSdiQuarter._stage1FileExists = yield FileHandler.fileExistsPromise(fdicSdiQuarter.stage1Filename);
-        fdicSdiQuarter._successfulActions = yield database.getPersistedSuccessfulActions(options.year, options.quarter);
+        //fdicSdiQuarter._successfulActions = yield database.getPersistedSuccessfulActions(options.year, options.quarter);
         //console.log(fdicSdiQuarter._successfulActions);
         fdicSdiQuarter._csvFileMetadata = yield getPersistedCsvFileMetadata(options.year, options.quarter);
         console.log(fdicSdiQuarter._csvFileMetadata.length);
@@ -82,7 +83,7 @@ class FdicSdiQuarter {
          distinctVarsMetadataTableFilled
          variablePersisted(varName)
          */
-        this._successfulActions = [];
+        //this._successfulActions = [];
 
         this._stage1FileExists;
 
@@ -94,20 +95,20 @@ class FdicSdiQuarter {
         this._csvFileMetadata = [];
     }
 
-    getSuccessfullAction(actionName) {
-        return this._successfulActions.find(x=>x.key == actionName);
-    }
-
-    setSuccessfulAction(actionName) {
-        const idx = this._successfulActions.findIndex(x=>x.key == actionName);
-        if (idx > -1) {
-            this._successfulActions.splice(idx);
-        }
-        const dt = new Date();
-        const newObj = {key: actionName, dateComplete: dt.toString()};
-        this._successfulActions.push(newObj);
-        database.persistSuccessfulActions(this._successfulActions, this._year, this._quarter);
-    }
+    // I don't think we need successfullActions property at all
+    //getSuccessfullAction(actionName) {
+    //    return this._successfulActions.find(x=>x.key == actionName);
+    //}
+    //setSuccessfulAction(actionName) {
+    //    const idx = this._successfulActions.findIndex(x=>x.key == actionName);
+    //    if (idx > -1) {
+    //        this._successfulActions.splice(idx);
+    //    }
+    //    const dt = new Date();
+    //    const newObj = {key: actionName, dateComplete: dt.toString()};
+    //    this._successfulActions.push(newObj);
+    //    database.persistSuccessfulActions(this._successfulActions, this._year, this._quarter);
+    //}
 
 
     //csv Files is a simple string array that is
@@ -170,6 +171,7 @@ function extractZipAndPersistMetadata(filename, destinationFolder, year, quarter
             }
             console.log('csvMetadataRecords.length after extraction, before upsert', csvMetadataRecords.length)
             upsertCsvMetadata(csvMetadataRecords, year, quarter, function () {
+                console.log('upsert callback, about to call convertcsvFilesToDatwabase')
                 convertCsvFilesToDatabase(csvMetadataRecords, year, quarter, function (result) {
                     resolve(result)
                 })
@@ -186,104 +188,120 @@ function persistCsvFileMetadata(metadataRecords, year, quarter) {
     }
 }
 
-function convertCsvFilesToDatabase(csvFiles, year, quarter) {
-    console.log('csvFiles.length in convertCsvFilesToDatabase', csvFiles.length)
-    console.log('csvFiles in convertCsvFilesToDatabase', csvFiles)
+function convertCsvFilesToDatabase(csvFileRecords, year, quarter, cb) {
+    //cb('ha ha - just kidding')
+    console.log('csvFileRecords.length in convertCsvFilesToDatabase', csvFileRecords.length)
+    //console.log('csvFileRecords in convertCsvFilesToDatabase', csvFileRecords)
     var csvFolder = getCsvFolder(year, quarter);
     console.log('csvFolder', csvFolder)
-    var p1 = new Promise(function (resolve, reject) {
-        let promises = []
-        csvFiles.forEach(function (record) {
-            let fname = record.filename;
-            //console.log('path.parse(fname).ext', path.parse(fname).ext)
-            if (path.parse(fname).ext === '.csv') {
-                console.log('processing ', fname)
-                let p = new Promise(function (resolveThis, reject) {
-                    convertCsvFileToDatabase(fname, csvFolder, function (result) {
-                        console.log('in convertCsvFileToDatabase callback', record)
-                        resolveThis();
-                    })
-                })
-                promises.push(p);
-            }
-        })
-        Promise.all(promises).then(function (result) {
-            resolve('all databases for all csv files create')
-        })
-    });
+    //var p1 = new Promise(function (resolve, reject) {
+    let promises = []
+    console.log('csvFileRecords',csvFileRecords);
+    csvFileRecords.forEach(function (record) {
+        console.log('xxxxxxx HERE!', record)
+        let fname = record.filename;
+        console.log('path.parse(fname).ext', path.parse(fname).ext)
+        if (path.parse(fname).ext === '.csv') {
+            console.log('\nin convertCsvFilesToDatabase- about to get ref to a promise ', fname)
+            var fullName=path.join(getCsvFolder(year,quarter),fname);
+            //var fullName=path.join(getCsvFolderTest(year,quarter),fname);
+            promises.push(convertCsvFileToDatabase(fullName))
+            console.log('in convertCsvFilesToDatabase csvFileRecords.forEach, promises', promises.length)
+
+        }
+    })
+    Promise.all(promises).then(function (result) {
+        console.log(promises)
+        cb('all databases for all csv files create')
+        // resolve('all databases for all csv files create')
+    })
+    //});
 
 
-    return p1;
+    //return p1;
 }
 
 
-function convertCsvFileToDatabase(csvFileRecord, csvFolder, cb) {
-    console.log('in convertCsvFileToDatabase', csvFileRecord)
-    let csvFile = path.join(csvFolder, csvFileRecord)
-    console.log('in convertCsvFileToDatabase csvFile', csvFile)
+function convertCsvFileToDatabase(csvFile) {
+    console.log('in convertCsvFileToDatabase', csvFile)
+    var p = new Promise(function (resolve, reject) {
 
-    var Converter = require("csvtojson").Converter;
-    //var columArrData=__dirname+"/data/columnArray";
-    var rs = fs.createReadStream(csvFile);
-    //console.log(csvFile);
-    var dbColumnArray = database.getColumnArrayDb(csvFile)
-    var dbOriginalShape = database.getOriginalShapeDb(csvFile)
-    var result = {}
-    var myMap = new Map();
-    var csvConverter = new Converter();
+            console.log('in convertCsvFileToDatabase Promise', csvFile)
+            //console.log('in convertCsvFileToDatabase csvFile', csvFile)
 
-    csvConverter.on("end_parsed", function (jsonObj) {
-        // console.log('xxxxxxxxx-jsonObj', jsonObj);
-        console.log("Finished parsing");
-        let promises = []
-        myMap.forEach(function (val, key) {
-            promises[0] = new Promise(function (res, rej) {
-                //dbColumnArray.
-                res();
-            })
-            promises[1] = new Promise(function (res, rej) {
-                //dbOriginalShape.
-                res();
-            })
-            // write to ...ColumnArray.db
-            // write to ...RecordCentric.db
-            //console.log('foreach...', key, val)
-        })
-        Promise.all(promises).then(function (value) {
-            resolve('all resolve')
-        })
-        cb();
-    });
+            //var columArrData=__dirname+"/data/columnArray";
+            let rs = fs.createReadStream(csvFile);
+            //console.log(csvFile);
+            let dbColumnArray = database.getColumnArrayDb(csvFile)
+            let dbOriginalShape = database.getOriginalShapeDb(csvFile)
+            let result = {}
+            let myMap = new Map();
+            let csvConverter = new Converter();
 
-    //record_parsed will be emitted each time a row has been parsed.
-    csvConverter.on("record_parsed", function (resultRow, rawRow, rowIndex) {
+            csvConverter.on("end_parsed", function (jsonObj) {
+                //console.log('xxxxxxxxx-jsonObj', jsonObj);
+                //console.log("Finished parsing");
+                console.log('in csvConverter.on("end_parsed",')
+                let promises = []
+                 myMap.forEach(function (val, key) {
+                 promises[0] = new Promise(function (res, rej) {
+                 //dbColumnArray.
+                 res();
+                 })
+                 promises[1] = new Promise(function (res, rej) {
+                 //dbOriginalShape.
+                 res();
+                 })
+                 // write to ...ColumnArray.db
+                 // write to ...RecordCentric.db
+                 //console.log('foreach...', key, val)
+                 })
+                 Promise.all(promises).then(function (value) {
+                 console.log('about to invoke cb in convertCsvFileToDatabase')
+                 resolve('all resolve')
+                 //cb();
+                 })
 
-        if (rowIndex < 2) {
-            //console.log('resultRow', rowIndex, resultRow)
-            //console.log('rawRow', rowIndex, rawRow)
-            for (var key in resultRow) {
-                if (!result[key] || !result[key] instanceof Array) {
-                    result[key] = [];
+            });
+
+            //record_parsed will be emitted each time a row has been parsed.
+            csvConverter.on("record_parsed", function (resultRow, rawRow, rowIndex) {
+                try {
+                    //console.log('in csvConverter.on("record_parsed") event, resultRow,',resultRow)
+                    //console.log('in csvConverter.on("record_parsed") event, rawRow',rawRow)
+                    //if (rowIndex < 2) {
+                    //console.log('resultRow', rowIndex, resultRow)
+                    //console.log('rawRow', rowIndex, rawRow)
+                    for (var key in resultRow) {
+                        if (!result[key] || !result[key] instanceof Array) {
+                            result[key] = [];
+                        }
+                        result[key][rowIndex] = resultRow[key];
+                        //console.log('in csvConverter.on("record_parsed" for loop, resultRow[key]',resultRow[key])
+                        //myMap.set(key,resultRow[key])
+
+                        if (!myMap.get(key)) {
+                            myMap.set(key, [])
+                        }
+                        let thisarray = myMap.get(key);
+                        thisarray.push(resultRow[key]);
+                        myMap.set(key, thisarray);
+
+                        //console.log('rowIndex, result[key][rowIndex] ',rowIndex,result[key][rowIndex] );
+                        //console.log('rowIndex, key, result[key] ',rowIndex,key,result[key])
+                        //result[key].pipe(ws)
+                    }
+                    //}
                 }
-                result[key][rowIndex] = resultRow[key];
-                //myMap.set(key,resultRow[key])
 
-                if (!myMap.get(key)) {
-                    myMap.set(key, [])
+                catch (err) {
+                    console.log(err)
                 }
-                let thisarray = myMap.get(key);
-                thisarray.push(resultRow[key]);
-                myMap.set(key, thisarray);
-
-                //console.log('rowIndex, result[key][rowIndex] ',rowIndex,result[key][rowIndex] );
-                //console.log('rowIndex, key, result[key] ',rowIndex,key,result[key])
-                //result[key].pipe(ws)
-            }
+            })
+            rs.pipe(csvConverter);//.pipe(ws)
         }
-    });
-
-    rs.pipe(csvConverter);//.pipe(ws)
-
+    )
+    return p;
 }
 
 //If a record already exists for the file, update it
@@ -379,7 +397,10 @@ function getCsvFolder(year, quarter) {
     var csvFolder = path.resolve(`${config.stage2Location}/${year}_q${quarter}`);
     return csvFolder;
 }
-
+function getCsvFolderTest(year, quarter) {
+    var csvFolder = path.resolve(`${config.testRoot}/fdic-sdi-quarter/csvFile`);
+    return csvFolder;
+}
 
 /**
  * Remove all nedb files for this quarter
@@ -403,6 +424,7 @@ function resetCsvFiles(year, quarter, cb) {
     })
 }
 
+
 module.exports = {
     fdicSdiQuarter_factory,
     getLocalState_AllVars,
@@ -411,5 +433,7 @@ module.exports = {
     resetCsvFiles,
     getPersistedCsvFileMetadata,
     extractZipAndPersistMetadata,
-    upsertCsvMetadata
+    upsertCsvMetadata,
+    convertCsvFileToDatabase,
+    convertCsvFilesToDatabase
 };

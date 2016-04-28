@@ -35,4 +35,5 @@ app-data
 test-data/fdic_stage_2
 test/zipfile-extract/destination/*.*
 test/zipfile-extract/source/*.*
+test/fdic-sdi-quarter/csvFile/*.db
 
