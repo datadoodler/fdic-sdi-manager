@@ -21,7 +21,7 @@ function getPersistedSuccessfulActions(year, quarter) {
                 resolve(docs)
             }
             if (err) {
-                throw err
+                reject(err)
             }
         });
     });
@@ -72,7 +72,7 @@ function getLocalState_CsvMetadata(year, quarter) {
 }
 
 function getColumnArrayDb(csvFilePath) {
-    var dbfile =  `${path.dirname(csvFilePath)}/${path.basename(csvFilePath, '.db')}_ColumnArray.db`;
+    var dbfile = `${path.dirname(csvFilePath)}/${path.basename(csvFilePath, '.db')}_ColumnArray.db`;
     var db = new Datastore({
         filename: dbfile,
         autoload: true,
@@ -81,7 +81,7 @@ function getColumnArrayDb(csvFilePath) {
     return db;
 }
 function getOriginalShapeDb(csvFilePath) {
-    var dbfile =  `${path.dirname(csvFilePath)}/${path.basename(csvFilePath, '.db')}_OriginalShape.db`;
+    var dbfile = `${path.dirname(csvFilePath)}/${path.basename(csvFilePath, '.db')}_OriginalShape.db`;
     var db = new Datastore({
         filename: dbfile,
         autoload: true,

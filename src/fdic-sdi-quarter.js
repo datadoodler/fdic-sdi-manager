@@ -32,17 +32,29 @@ function* fdicSdiQuarter_factory(options) {
 
     try {
         options = resolveOptions(options);
-        console.log(options)
+        //console.log(options)
         var fdicSdiQuarter = new FdicSdiQuarter(options.year, options.quarter);
-
+        var x = {}
         // GET INITIAL STATE - FILL ASYNC PROPERTIES FOR THIS INSTANCE
-        fdicSdiQuarter._stage1FileExists = yield FileHandler.fileExists(fdicSdiQuarter.stage1Filename);
-        fdicSdiQuarter._successfulActions = yield database.getPersistedSuccessfulActions(options.year, options.quarter);
 
+
+        fdicSdiQuarter._stage1FileExists = yield FileHandler.fileExistsPromise(fdicSdiQuarter.stage1Filename);
+        fdicSdiQuarter._successfulActions = yield database.getPersistedSuccessfulActions(options.year, options.quarter);
+        //console.log(fdicSdiQuarter._successfulActions);
         fdicSdiQuarter._csvFileMetadata = yield getPersistedCsvFileMetadata(options.year, options.quarter);
+        console.log(fdicSdiQuarter._csvFileMetadata.length);
         console.log(fdicSdiQuarter.stage1FileExists)
         if (fdicSdiQuarter._csvFileMetadata.length === 0 && fdicSdiQuarter.stage1FileExists) {
             fdicSdiQuarter._csvFileMetadata = yield extractZipAndPersistMetadata(fdicSdiQuarter.stage1Filename, getCsvFolder(options.year, options.quarter), options.year, options.quarter)
+            //console.log(fdicSdiQuarter._csvFileMetadata.length)
+            var msg = "placeholder"
+            //msg = yield convertCsvFilesToDatabase(fdicSdiQuarter._csvFileMetadata,options.year,options.quarter)
+            console.log('msg', msg)
+            //fdicSdiQuarter._csvFileMetadata.forEach(function (csvMetaRecord) {
+            //    console.log(csvMetaRecord)
+            //    //msg = yield convertCsvToDatabase(csvMetaRecord)
+            //    console.log(msg)
+            //})
         }
         return fdicSdiQuarter;
     }
@@ -143,28 +155,107 @@ function resolveOptions(options) {
     }
 }
 
-function convertCsvToDatabase(csvFile, cb) {
+
+function extractZipAndPersistMetadata(filename, destinationFolder, year, quarter) {
+    console.log('filename', filename, destinationFolder)
+    destinationFolder = destinationFolder || getCsvFolder(year, quarter);
+    let p = new Promise(function (resolve, reject) {
+        var extractPromise = FileHandler.extractZippedFiles(filename, destinationFolder);
+        console.log(destinationFolder);
+
+        extractPromise.then(function (csvMetadataRecords, err) {
+            if (err) {
+                console.log(err)
+                throw err
+            }
+            console.log('csvMetadataRecords.length after extraction, before upsert', csvMetadataRecords.length)
+            upsertCsvMetadata(csvMetadataRecords, year, quarter, function () {
+                convertCsvFilesToDatabase(csvMetadataRecords, year, quarter, function (result) {
+                    resolve(result)
+                })
+            })
+        });
+    });
+    return p;
+}
+
+function persistCsvFileMetadata(metadataRecords, year, quarter) {
+//console.log(metadata)
+    for (let i = 0; i < metadataRecords.length; i++) {
+        upsertCsvMetadata(metadataRecords[i], year, quarter);
+    }
+}
+
+function convertCsvFilesToDatabase(csvFiles, year, quarter) {
+    console.log('csvFiles.length in convertCsvFilesToDatabase', csvFiles.length)
+    console.log('csvFiles in convertCsvFilesToDatabase', csvFiles)
+    var csvFolder = getCsvFolder(year, quarter);
+    console.log('csvFolder', csvFolder)
+    var p1 = new Promise(function (resolve, reject) {
+        let promises = []
+        csvFiles.forEach(function (record) {
+            let fname = record.filename;
+            //console.log('path.parse(fname).ext', path.parse(fname).ext)
+            if (path.parse(fname).ext === '.csv') {
+                console.log('processing ', fname)
+                let p = new Promise(function (resolveThis, reject) {
+                    convertCsvFileToDatabase(fname, csvFolder, function (result) {
+                        console.log('in convertCsvFileToDatabase callback', record)
+                        resolveThis();
+                    })
+                })
+                promises.push(p);
+            }
+        })
+        Promise.all(promises).then(function (result) {
+            resolve('all databases for all csv files create')
+        })
+    });
+
+
+    return p1;
+}
+
+
+function convertCsvFileToDatabase(csvFileRecord, csvFolder, cb) {
+    console.log('in convertCsvFileToDatabase', csvFileRecord)
+    let csvFile = path.join(csvFolder, csvFileRecord)
+    console.log('in convertCsvFileToDatabase csvFile', csvFile)
+
     var Converter = require("csvtojson").Converter;
     //var columArrData=__dirname+"/data/columnArray";
     var rs = fs.createReadStream(csvFile);
-    var dbColumnArray=database.getColumnArrayDb(csvFilePath)
-    var dbOriginalShape=database.getOriginalShapeDb(csvFilePath)
+    //console.log(csvFile);
+    var dbColumnArray = database.getColumnArrayDb(csvFile)
+    var dbOriginalShape = database.getOriginalShapeDb(csvFile)
     var result = {}
     var myMap = new Map();
     var csvConverter = new Converter();
 
     csvConverter.on("end_parsed", function (jsonObj) {
-        console.log('xxxxxxxxx-jsonObj', jsonObj);
+        // console.log('xxxxxxxxx-jsonObj', jsonObj);
         console.log("Finished parsing");
+        let promises = []
         myMap.forEach(function (val, key) {
-// write to ...ColumnArray.db
-// write to ...RecordCentric.db
-            console.log('foreach...', key, val)
+            promises[0] = new Promise(function (res, rej) {
+                //dbColumnArray.
+                res();
+            })
+            promises[1] = new Promise(function (res, rej) {
+                //dbOriginalShape.
+                res();
+            })
+            // write to ...ColumnArray.db
+            // write to ...RecordCentric.db
+            //console.log('foreach...', key, val)
+        })
+        Promise.all(promises).then(function (value) {
+            resolve('all resolve')
         })
         cb();
     });
 
-//record_parsed will be emitted each time a row has been parsed.
+    //record_parsed will be emitted each time a row has been parsed.
     csvConverter.on("record_parsed", function (resultRow, rawRow, rowIndex) {
 
         if (rowIndex < 2) {
@@ -192,46 +283,17 @@ function convertCsvToDatabase(csvFile, cb) {
     });
 
     rs.pipe(csvConverter);//.pipe(ws)
-}
 
-
-function extractZipAndPersistMetadata(filename, destinationFolder, year, quarter) {
-    console.log('filename', filename, destinationFolder)
-    destinationFolder = destinationFolder || getCsvFolder(year, quarter);
-    let p = new Promise(function (resolve, reject) {
-        var extractPromise = FileHandler.extractZippedFiles(filename, destinationFolder);
-
-
-        extractPromise.then(function (result, err) {
-            if (err) {
-                console.log(err)
-                throw err
-            }
-            //console.log(result)
-
-            upsertCsvFile(result, year, quarter, function () {
-                resolve()
-            })
-        });
-    });
-    return p;
-}
-
-function persistCsvFileMetadata(metadataRecords, year, quarter) {
-//console.log(metadata)
-    for (let i = 0; i < metadataRecords.length; i++) {
-        upsertCsvFile(metadataRecords[i], year, quarter);
-    }
 }
 
 //If a record already exists for the file, update it
 //If a record doesn't exist for the file, insert it
-function upsertCsvFile(records, year, quarter, cb) {
+function upsertCsvMetadata(records, year, quarter, cb) {
     //console.log('upsertCsvFile args', records, year, quarter)
     var db = database.getLocalState_CsvMetadata(year, quarter);
     var promises = [];
 
-    for (let i = 0; i < records.length; i++)
+    for (let i = 0; i < records.length; i++) {
         var p = new Promise(function (resolve, reject) {
             let record = records[i]
             let query = {
@@ -248,10 +310,11 @@ function upsertCsvFile(records, year, quarter, cb) {
             })
         });
         promises.push(p);
-    }
-    //console.log(promises)
 
+        //console.log(promises)
+    }
     Promise.all(promises).then(function (value) {
+        console.log('finished with upsert. about to call cb()')
         cb();
     })
 
@@ -348,5 +411,5 @@ module.exports = {
     resetCsvFiles,
     getPersistedCsvFileMetadata,
     extractZipAndPersistMetadata,
-    upsertCsvFile
+    upsertCsvMetadata
 };

@@ -5,11 +5,11 @@ var chai = require('chai');
 var expect = chai.expect;
 var FileHandler = require('../../src/file-handler.js');
 
-var fileThatExists = path.join(__dirname,"source/All_Reports_20081231.zip");
-var destinationFolder = path.join(__dirname,"destination")
+var fileThatExists = path.join(config.testRoot,"zipfile-extract/source/All_Reports_20081231.zip");
+var destinationFolder = path.join(config.testRoot,"zipfile-extract/destination")
 
-//console.log('fileThatExists',fileThatExists);
-//console.log('destinationFolder',destinationFolder);
+console.log('fileThatExists',fileThatExists);
+console.log('destinationFolder',destinationFolder);
 describe('test file extraction',function(){
     before('delete any existing files in destination',function(done){
         //console.log('before')

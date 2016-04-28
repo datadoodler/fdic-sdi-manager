@@ -14,14 +14,14 @@ var database = require('../src/database.js');
 
 
 describe('fdic-sdi-quarter - With Valid QDate - GETTERS AND SETTERS', function () {
-    this.timeout(15000);
+    this.timeout(25000);
     var myFdicSdiQuarter;
     before(function (done) {
 
         var options = {year: 2008, quarter: 4};
 
         var fdicSdiQuarter = co(FdicSdiQuarterModule.fdicSdiQuarter_factory(options));
-        console.log("This is fdic quarter in 2 ", fdicSdiQuarter);
+        //console.log("This is fdic quarter in 2 ", fdicSdiQuarter);
         fdicSdiQuarter.then(function (result) {
             myFdicSdiQuarter = result;
             //console.log(result);

@@ -28,6 +28,7 @@
     "co": "^4.6.0",
     "config": "^1.19.0",
     "csvtojson": "^0.5.3",
+    "mkdirp": "^0.5.1",
     "nedb": "^1.8.0",
     "request-promise": "^2.0.1",
     "winston": "^2.2.0",
