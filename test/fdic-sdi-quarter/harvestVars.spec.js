@@ -24,16 +24,15 @@ describe.skip('convert a file', function () {
                 done()
             })
     })
-})
+});
 
-describe('convert an array of files', function () {
+describe('convert a csv file to databases', function () {
     this.timeout(15000);
-    it('should run and return a promise', function (done) {
+    it('should run and build 2 databases in the same directory', function (done) {
         var csvFileRecords = [{filename: 'csvFile1.csv'}, {filename: 'csvFile2.csv'}];
-        FdicSdiQuarterModule.convertCsvFilesToDatabase(csvFileRecords,2008,1, function(result){
-            console.log('result',result)
+        FdicSdiQuarterModule.convertCsvFilesToDatabase(csvFileRecords, 2008, 1, function (result) {
+            console.log('result', result);
             done()
         })
-
     })
 })
