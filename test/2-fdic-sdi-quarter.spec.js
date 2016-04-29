@@ -17,7 +17,7 @@ describe('fdic-sdi-quarter - With Valid QDate - GETTERS AND SETTERS', function (
     this.timeout(205000);
     var myFdicSdiQuarter;
     before(function (done) {
-
+var startTime = Date.now()
         var options = {year: 2008, quarter: 4};
 
         var fdicSdiQuarter = co(FdicSdiQuarterModule.fdicSdiQuarter_factory(options));
@@ -25,6 +25,7 @@ describe('fdic-sdi-quarter - With Valid QDate - GETTERS AND SETTERS', function (
         fdicSdiQuarter.then(function (result) {
             myFdicSdiQuarter = result;
             //console.log(result);
+            console.log('milisconds:',Date.now()-startTime)
             done()
         })
     });
