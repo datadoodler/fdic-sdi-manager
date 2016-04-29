@@ -1,6 +1,6 @@
 {
   "name": "fdic-sdi-manager",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Interact with datadoodler resources on AWS",
   "main": "lib/fdic-sdi-manager.js",
   "scripts": {
